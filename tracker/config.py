@@ -1,15 +1,12 @@
 """Load config/settings.yaml and config/sources.yaml."""
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 CONFIG_DIR = ROOT / "config"
-# Folder holding data/ and my_data/ (overridable for tests and demos).
-DATA_ROOT = Path(os.environ.get("TRACKER_DATA_ROOT") or ROOT)
 
 DEFAULT_SETTINGS = {
     "keep_full_description": False,

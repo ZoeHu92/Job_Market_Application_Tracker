@@ -165,7 +165,7 @@ def parse_message(msg, today: date | None = None) -> list[RawJob]:
 
 class EmailSource:
     def __init__(self, cfg: dict, fetcher=None, settings: dict | None = None):
-        from ..applications import MY_DATA  # local import: avoids a cycle at module load
+        from .. import paths
 
         self.cfg = cfg
         self.name = cfg["name"]
@@ -174,7 +174,7 @@ class EmailSource:
         self.folder = opts.get("folder", "JobAlerts")
         self.lookback = int(opts.get("lookback_days", 30))
         self.max_messages = int(opts.get("max_messages", 300))
-        self.env_file = MY_DATA / "email.env"
+        self.env_file = paths.email_env()
 
     def run(self, known_ids: set[str], today: date | None = None, imap_factory=imaplib.IMAP4_SSL) -> SourceResult:
         t0 = time.monotonic()

@@ -1,0 +1,118 @@
+# Builds double-click releases (Windows installer + zip, macOS zips) and publishes them.
+#   - push a tag like v1.0.0, or
+#   - Actions → Release → Run workflow (tick "publish" to create the GitHub release).
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version number, e.g. 1.0.0"
+        required: true
+      publish:
+        description: "Create the GitHub release (otherwise only build and test)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: build (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, name: windows-x64 }
+          - { os: macos-latest, name: macos-apple-silicon }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Version
+        shell: bash
+        run: |
+          V="${{ inputs.version }}"
+          if [ -z "$V" ]; then V="${GITHUB_REF_NAME#v}"; fi
+          echo "VERSION=$V" >> "$GITHUB_ENV"
+
+      - name: Build portable folder and zip
+        shell: bash
+        run: uv run --no-project --python 3.12 python packaging/build.py --version "$VERSION" --name ${{ matrix.name }}
+
+      - name: Check that the build starts
+        shell: bash
+        run: uv run --no-project --python 3.12 python packaging/smoke_test.py dist/AcademicJobTracker
+
+      - name: Windows installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
+          & $iscc "/DAppVersion=$env:VERSION" packaging\installer.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: |
+            dist/*.zip
+            dist/*.exe
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    needs: build
+    if: ${{ always() && !cancelled() && (startsWith(github.ref, 'refs/tags/v') || inputs.publish) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create or update the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V="${{ inputs.version }}"
+          if [ -z "$V" ]; then V="${GITHUB_REF_NAME#v}"; fi
+          ls -la dist
+          test -n "$(ls dist/*windows* 2>/dev/null)" && test -n "$(ls dist/*macos-apple-silicon* 2>/dev/null)"
+          if gh release view "v$V" >/dev/null 2>&1; then
+            gh release upload "v$V" dist/* --clobber
+          else
+            gh release create "v$V" dist/* --title "Academic Job Market Tracker v$V" \
+              --notes-file packaging/RELEASE_NOTES.md --target "$GITHUB_SHA"
+          fi
+
+  # Older Intel Macs: built after the release is published and added to it, so a missing or
+  # slow Intel runner never holds up the main downloads.
+  build-macos-intel:
+    needs: publish
+    if: ${{ needs.publish.result == 'success' }}
+    runs-on: macos-15-intel
+    timeout-minutes: 60
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Build, check and attach to the release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V="${{ inputs.version }}"
+          if [ -z "$V" ]; then V="${GITHUB_REF_NAME#v}"; fi
+          uv run --no-project --python 3.12 python packaging/build.py --version "$V" --name macos-intel
+          uv run --no-project --python 3.12 python packaging/smoke_test.py dist/AcademicJobTracker
+          gh release upload "v$V" dist/*.zip --clobber

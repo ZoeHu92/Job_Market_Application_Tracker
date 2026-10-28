@@ -10,12 +10,9 @@ from pathlib import Path
 import pandas as pd
 import requests
 
-from .applications import MY_DATA
-from .config import DATA_ROOT, ROOT
+from . import paths
+from .config import ROOT
 from .schema import JOB_COLUMNS
-
-REPO_DATA = DATA_ROOT / "data"
-LOCAL_DATA = MY_DATA / "latest"   # downloaded from GitHub or scraped on this computer
 
 
 def _report(folder: Path) -> dict:
@@ -27,10 +24,11 @@ def _report(folder: Path) -> dict:
 
 def newest_data_dir() -> tuple[Path, dict]:
     """The folder (repo data/ or my_data/latest/) holding the most recent run."""
-    best, best_rep = REPO_DATA, _report(REPO_DATA)
-    rep = _report(LOCAL_DATA)
-    if (LOCAL_DATA / "jobs.csv").exists() and rep.get("finished_at", "") > best_rep.get("finished_at", ""):
-        best, best_rep = LOCAL_DATA, rep
+    repo, local = paths.repo_data_dir(), paths.latest_dir()
+    best, best_rep = repo, _report(repo)
+    rep = _report(local)
+    if (local / "jobs.csv").exists() and rep.get("finished_at", "") > best_rep.get("finished_at", ""):
+        best, best_rep = local, rep
     return best, best_rep
 
 
@@ -53,8 +51,9 @@ def load_jobs_union() -> tuple[pd.DataFrame, dict, Path]:
     next weekly download.
     """
     newest, report = newest_data_dir()
+    repo, local = paths.repo_data_dir(), paths.latest_dir()
     frames = []
-    for folder in ([REPO_DATA, LOCAL_DATA] if newest == LOCAL_DATA else [LOCAL_DATA, REPO_DATA]):
+    for folder in ([repo, local] if newest == local else [local, repo]):
         df = read_jobs_frame(folder)
         if len(df):
             frames.append(df)
@@ -70,7 +69,8 @@ def download_latest(repo: str, timeout: float = 30) -> str:
     api = requests.get(f"https://api.github.com/repos/{repo}", timeout=timeout)
     api.raise_for_status()
     branch = api.json().get("default_branch", "main")
-    LOCAL_DATA.mkdir(parents=True, exist_ok=True)
+    local = paths.latest_dir()
+    local.mkdir(parents=True, exist_ok=True)
     for name in ("jobs.csv", "scrape_report.json", "skipped_ids.json"):
         r = requests.get(f"https://raw.githubusercontent.com/{repo}/{branch}/data/{name}", timeout=timeout)
         if r.status_code == 404:
@@ -78,27 +78,25 @@ def download_latest(repo: str, timeout: float = 30) -> str:
                 raise FileNotFoundError(f"No data/jobs.csv on branch '{branch}' yet - has the weekly workflow run?")
             continue
         r.raise_for_status()
-        (LOCAL_DATA / name).write_bytes(r.content)
-    rep = _report(LOCAL_DATA)
+        (local / name).write_bytes(r.content)
+    rep = _report(local)
     return f"Downloaded data from {repo}@{branch} (run finished {rep.get('finished_at', 'unknown')})."
 
 
-EMAIL_ENV = MY_DATA / "email.env"
-
-
 def save_email_credentials(user: str, password: str) -> None:
-    MY_DATA.mkdir(parents=True, exist_ok=True)
-    EMAIL_ENV.write_text(f"TRACKER_IMAP_USER={user.strip()}\nTRACKER_IMAP_PASSWORD={password.strip()}\n",
-                         encoding="utf-8")
+    env = paths.email_env()
+    env.parent.mkdir(parents=True, exist_ok=True)
+    env.write_text(f"TRACKER_IMAP_USER={user.strip()}\nTRACKER_IMAP_PASSWORD={password.strip()}\n",
+                   encoding="utf-8")
     try:
-        EMAIL_ENV.chmod(0o600)
+        env.chmod(0o600)
     except OSError:
         pass
 
 
 def local_scrape_command(sources: list[str] | None = None) -> list[str]:
     base, _ = newest_data_dir()
-    cmd = [sys.executable, "-m", "tracker.scrape", "--data-dir", str(LOCAL_DATA),
+    cmd = [sys.executable, "-m", "tracker.scrape", "--data-dir", str(paths.latest_dir()),
            "--baseline", str(base / "jobs.csv"), "--keep-description"]
     if sources:
         cmd += ["--sources", ",".join(sources)]
@@ -106,10 +104,11 @@ def local_scrape_command(sources: list[str] | None = None) -> list[str]:
 
 
 def run_local_scrape(sources: list[str] | None = None) -> subprocess.CompletedProcess:
-    LOCAL_DATA.mkdir(parents=True, exist_ok=True)
+    local = paths.latest_dir()
+    local.mkdir(parents=True, exist_ok=True)
     base, _ = newest_data_dir()
-    if base != LOCAL_DATA and (base / "skipped_ids.json").exists() and not (LOCAL_DATA / "skipped_ids.json").exists():
-        (LOCAL_DATA / "skipped_ids.json").write_bytes((base / "skipped_ids.json").read_bytes())
+    if base != local and (base / "skipped_ids.json").exists() and not (local / "skipped_ids.json").exists():
+        (local / "skipped_ids.json").write_bytes((base / "skipped_ids.json").read_bytes())
     return subprocess.run(local_scrape_command(sources), cwd=ROOT, capture_output=True, text=True, timeout=3 * 3600)
 
 

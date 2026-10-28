@@ -16,18 +16,37 @@ insurance and more).
 * A weekly **digest issue** opens on GitHub (GitHub emails it to you): new postings by field, deadlines in the
   next 14 days, and postings closed that week.
 
-## Quick start
+## Download and start
 
-1. **Install Python 3.10+** ([python.org](https://www.python.org/downloads/)) and **git**.
-2. Clone this repository:
-   ```bash
-   git clone https://github.com/ZoeHu92/Job_Market_Application_Tracker.git
-   ```
-3. Double-click **`start_tracker.command`** (macOS) or **`start_tracker.bat`** (Windows).
-   The first launch installs the packages (about a minute), then the tracker opens in your browser.
-   Each later launch first pulls that week's job data from GitHub.
+Get the latest version from the **[Releases page](https://github.com/ZoeHu92/Job_Market_Application_Tracker/releases/latest)**.
+It includes its own Python, so nothing else needs to be installed.
 
-Manual alternative: `pip install -r requirements.txt`, then `streamlit run app.py`.
+| Computer | Download | Start |
+|---|---|---|
+| Windows | `…-windows-setup.exe` (installer) or `…-windows-x64.zip` (no install) | Run the installer, then use the Start-menu entry; or unzip and double-click **Start Job Tracker.bat**. If Windows says "Windows protected your PC": *More info → Run anyway*. |
+| Mac (Apple chip) | `…-macos-apple-silicon.zip` | Unzip, **right-click** **Start Job Tracker.command** → *Open* → *Open* (first time only). |
+| Mac (Intel) | `…-macos-intel.zip` | Same as above. |
+
+The tracker opens in your browser. Keep the small window that starts with it open while you use it; close it to
+quit. To update, install or unzip the newer version; your progress is stored separately and is kept. The app
+tells you when a new version is out.
+
+**From source instead** (for developers): `git clone` this repository, then double-click `start_tracker.command`
+(Mac) or `start_tracker.bat` (Windows); they set up Python packages on first run. Or run
+`pip install -r requirements.txt` and `python launch.py`.
+
+## Use it on several computers
+
+In the app, open **Data & sources → Where your progress is stored**, pick your cloud drive (iCloud Drive,
+OneDrive, Dropbox, Google Drive or Nutstore are detected automatically) and click **Use this folder**. Do the same
+on every computer: your ticks, dates, notes and added jobs then live in one folder that the cloud drive keeps in
+sync. If both computers already had progress, it is merged (the newest change for each job wins).
+
+* **Phone:** the folder also holds `My job applications.xlsx`, refreshed whenever you change something. Open it
+  in the cloud-drive app on your phone to check your pipeline (read-only).
+* **Saving on two computers at the same moment** can make the cloud drive create a "conflict copy". The app
+  notices it and offers a one-click merge.
+* The weekly job list is downloaded by each computer itself; only your own progress is synced.
 
 ## Turning on the weekly scrape (one time)
 
@@ -101,16 +120,24 @@ weekly reading on GitHub instead, make the repository private and add the secret
 
 Click **Save as default** in the sidebar to keep your filters (for example, Finance + Entry level).
 
-## Privacy
+## Privacy and security
 
-Your ticks, dates and notes live in `my_data/` on your computer. That folder is listed in `.gitignore` and is
-never pushed; a dated copy is kept in `my_data/backups/` every day. Use **Data & sources → Back up my
-statuses** to copy them elsewhere.
-
-While the repository is public, only public job-posting data is committed, and full posting texts are not
-stored (`keep_full_description: false` in `config/settings.yaml`). The app shows the extracted requirements,
-links to the original, and can load the full text on demand. If you make the repository private, you can set
-that option to `true`.
+* **Your progress is private and separate for every user.** Ticks, dates, notes, added jobs and preferences are
+  stored only on your computer (or in the cloud-drive folder you choose): in a release build under
+  `%APPDATA%\AcademicJobTracker` (Windows) or `~/Library/Application Support/AcademicJobTracker` (Mac); in a
+  source checkout under `my_data/`, which is listed in `.gitignore`. Nothing is uploaded to GitHub or anywhere
+  else, and someone else using this tracker has their own, separate progress.
+* **What is public:** this repository's code and the weekly list of job postings in `data/` (public job ads,
+  without their full text). The weekly digest issues contain the same public information.
+* **Network access:** the app only listens on your own computer (`localhost`), so other people on the same Wi-Fi
+  cannot open it. It contacts GitHub (to download the weekly job list and check for a new version) and, only when
+  you click those buttons, job boards or posting links.
+* **Passwords:** none are needed. Member-only boards are imported from pages you save yourself. The optional
+  e-mail reader stores a revocable app password in a local file on your computer only (never in a synced folder).
+* **Backups:** a dated copy of your progress is kept every day (last 60) in the `backups` folder next to it;
+  *Data & sources → Back up my statuses* downloads a copy you can keep anywhere.
+* While the repository is public, full posting texts are not stored in it (`keep_full_description: false` in
+  `config/settings.yaml`); the app shows extracted requirements and fetches the full text on demand.
 
 ### How "Closed" is decided
 
@@ -123,14 +150,15 @@ Postings that come back are re-opened.
 ## Files
 
 ```
-app.py                     Streamlit app
+app.py, launch.py          Streamlit app and its launcher
 tracker/                   scraper + parsing + storage (python -m tracker.scrape)
 config/sources.yaml        job boards
 config/settings.yaml       politeness limits, digest and e-mail options, full-text storage
 data/jobs.csv              all postings ever seen (written by the weekly workflow; opens in Excel/Stata)
 data/scrape_report.json    per-board results of the last run
 data/weekly_digest.md      the digest text
-my_data/                   YOUR statuses, added jobs, preferences, backups (local only)
+my_data/                   source checkout only: YOUR progress and backups (local, never pushed)
+packaging/                 release builds (build.py, Windows installer script, release notes)
 ```
 
 `data/jobs.csv` loads directly into Stata (`import delimited data/jobs.csv, varnames(1) bindquote(strict)

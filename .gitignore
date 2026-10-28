@@ -10,3 +10,7 @@ venv/
 
 # Your personal application statuses stay on your own computer (this repository is public).
 my_data/
+
+# Release builds (packaging/build.py)
+dist/
+build/

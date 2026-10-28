@@ -16,4 +16,4 @@ if [ ! -f .venv/.installed ] || [ requirements.txt -nt .venv/.installed ]; then
   .venv/bin/python -m pip install --quiet -r requirements.txt && touch .venv/.installed
 fi
 
-exec .venv/bin/python -m streamlit run app.py
+exec .venv/bin/python launch.py

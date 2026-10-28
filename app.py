@@ -7,15 +7,17 @@ from __future__ import annotations
 import hashlib
 import io
 import os
+import re
 from datetime import date
 from pathlib import Path
 
 import pandas as pd
 import streamlit as st
 
+from tracker import __version__, paths
 from tracker import applications as A
-from tracker.appdata import (EMAIL_ENV, LOCAL_DATA, data_is_stale, download_latest, load_jobs_union,
-                             newest_data_dir, run_local_scrape, save_email_credentials)
+from tracker.appdata import (data_is_stale, download_latest, load_jobs_union, newest_data_dir, run_local_scrape,
+                             save_email_credentials)
 from tracker.classify import fmt_date
 from tracker.config import load_settings, load_sources
 from tracker.enrich import enrich
@@ -30,7 +32,6 @@ st.set_page_config(page_title="Job Market Tracker", page_icon="🎓", layout="wi
 
 TODAY = date.today()
 SETTINGS = load_settings()
-DESC_CACHE = A.MY_DATA / "descriptions"
 
 ss = st.session_state
 ss.setdefault("gens", {"jobs": 0, "apps": 0})
@@ -59,14 +60,56 @@ def _jobs_cached(stamp: tuple) -> tuple[pd.DataFrame, dict, str]:
 
 def _stamp() -> tuple:
     return tuple(p.stat().st_mtime if p.exists() else 0.0
-                 for p in (A.MY_DATA.parent / "data" / "jobs.csv", LOCAL_DATA / "jobs.csv"))
+                 for p in (paths.repo_data_dir() / "jobs.csv", paths.latest_dir() / "jobs.csv"))
 
 
 JOBS, REPORT, _folder = _jobs_cached(_stamp())
 DATA_DIR = Path(_folder)
+
+
+def _latest_release() -> tuple[str, str]:
+    """(tag, url) of the newest GitHub release, or ('', '') when offline."""
+    try:
+        import requests
+        r = requests.get(f"https://api.github.com/repos/{SETTINGS['github_repo']}/releases/latest", timeout=5)
+        if r.status_code == 200:
+            d = r.json()
+            return d.get("tag_name", ""), d.get("html_url", "")
+    except Exception:  # noqa: BLE001
+        pass
+    return "", ""
+
+
+def _version_tuple(v: str) -> tuple:
+    return tuple(int(x) for x in re.findall(r"\d+", v)[:3])
+
+
+if "release_checked" not in ss:
+    ss.release_checked = True
+    ss.new_release = ("", "")
+    if paths.is_portable() and not os.environ.get("TRACKER_NO_AUTO_UPDATE"):
+        tag, url = _latest_release()
+        if tag and _version_tuple(tag) > _version_tuple(__version__):
+            ss.new_release = (tag, url)
 APPS = A.load_applications()
 MANUAL = A.load_manual_jobs()
 DF = build_frame(JOBS, MANUAL, APPS, TODAY)
+
+
+def _refresh_excel_copy() -> None:
+    """Keep 'My job applications.xlsx' next to a synced progress folder up to date (for phones)."""
+    if not paths.user_dir_is_custom() or not paths.apps_file().exists():
+        return
+    out = paths.export_file()
+    if out.exists() and out.stat().st_mtime >= paths.apps_file().stat().st_mtime:
+        return
+    try:
+        export_frame(DF[DF["tracked"]]).to_excel(out, index=False, sheet_name="My applications")
+    except OSError:
+        pass  # e.g. the file is open in Excel; try again next time
+
+
+_refresh_excel_copy()
 
 # --------------------------------------------------------------------------------------
 # Saving edits
@@ -206,6 +249,29 @@ with st.sidebar:
 
 FILTERS = Filters(**{k: ss[f"f_{k}"] for k in FILTER_KEYS})
 
+with st.sidebar:
+    if ss.new_release[0]:
+        st.info(f"Version {ss.new_release[0]} is available (you have v{__version__}). "
+                f"[Download it]({ss.new_release[1]}); your progress is kept.", icon="⬆️")
+    st.caption(f"Academic Job Market Tracker v{__version__}")
+
+
+def common_banners() -> None:
+    if ss.get("flash"):
+        st.success(ss.pop("flash"))
+    copies = paths.conflict_copies()
+    if copies:
+        c1, c2 = st.columns([4, 1])
+        c1.warning(f"Your cloud drive made {len(copies)} conflict copies of your progress "
+                   f"({', '.join(p.name for p in copies[:3])}), probably because two computers saved at the "
+                   "same time. Merge them so no tick is lost.", icon="⚠️")
+        if c2.button("Merge now", type="primary"):
+            n = A.resolve_conflict_copies()
+            ss.flash = f"Merged {n} conflict copies; the newest change for each job was kept."
+            for k in ss.gens:
+                ss.gens[k] += 1
+            st.rerun()
+
 
 # --------------------------------------------------------------------------------------
 # Pages
@@ -216,7 +282,7 @@ def data_banner() -> None:
     if not REPORT:
         return
     run = REPORT.get("run_date", "?")
-    where = "weekly GitHub run" if DATA_DIR != LOCAL_DATA else "latest download / local scrape"
+    where = "weekly GitHub run" if DATA_DIR != paths.latest_dir() else "latest download / local scrape"
     bad = [s["name"] for s in REPORT.get("sources", []) if not s.get("ok")]
     msg = f"Data from {run} ({where})."
     if bad:
@@ -236,6 +302,7 @@ def welcome() -> None:
 
 def page_jobs() -> None:
     st.title("🎓 Business-school job market")
+    common_banners()
     data_banner()
     if DF.empty:
         welcome()
@@ -265,6 +332,7 @@ def page_jobs() -> None:
 
 def page_mine() -> None:
     st.title("✅ My applications")
+    common_banners()
     tracked = DF[DF["tracked"]]
     counts = [("⭐ Starred", "starred"), ("📝 Planned", "planned"), ("📤 Applied", "applied"),
               ("🎤 Interviews", "interview"), ("✈️ Flyouts", "flyout"), ("🎉 Offers", "offer"), ("✗ Out", "rejected")]
@@ -305,20 +373,22 @@ def page_mine() -> None:
 
 
 def _cached_description(url: str) -> str:
-    path = DESC_CACHE / (hashlib.sha1(url.encode()).hexdigest()[:16] + ".txt")
+    path = paths.descriptions_dir() / (hashlib.sha1(url.encode()).hexdigest()[:16] + ".txt")
     return path.read_text(encoding="utf-8") if path.exists() else ""
 
 
 def _fetch_description(url: str) -> str:
     r = Fetcher(delay=0).get(url)
     text = extract_posting(r.content, r.url)["description"]
-    DESC_CACHE.mkdir(parents=True, exist_ok=True)
-    (DESC_CACHE / (hashlib.sha1(url.encode()).hexdigest()[:16] + ".txt")).write_text(text, encoding="utf-8")
+    cache = paths.descriptions_dir()
+    cache.mkdir(parents=True, exist_ok=True)
+    (cache / (hashlib.sha1(url.encode()).hexdigest()[:16] + ".txt")).write_text(text, encoding="utf-8")
     return text
 
 
 def page_details() -> None:
     st.title("🔍 Job details")
+    common_banners()
     if DF.empty:
         welcome()
         return
@@ -449,6 +519,7 @@ def import_saved_pages() -> None:
 
 def page_add() -> None:
     st.title("➕ Add jobs")
+    common_banners()
     import_saved_pages()
     st.divider()
     st.subheader("✍️ One posting at a time")
@@ -530,6 +601,44 @@ def page_add() -> None:
         st.caption("To edit or delete one, open it on the Job details page.")
 
 
+def progress_folder_section() -> None:
+    st.subheader("💾 Where your progress is stored")
+    current = paths.user_dir()
+    if paths.user_dir_is_custom():
+        st.success(f"Synced folder: `{current}`", icon="☁️")
+    else:
+        st.info(f"This computer only: `{current}`", icon="💻")
+    st.markdown(
+        "**Use the tracker on several computers:** keep your progress in a cloud-drive folder (iCloud Drive, "
+        "OneDrive, Dropbox, Google Drive, Nutstore). Choose the same folder on each computer; ticks, dates, notes "
+        "and added jobs then stay in sync. Your phone can open the read-only copy *My job applications.xlsx* from "
+        "that folder in the cloud-drive app. The weekly job list is downloaded on each computer separately.")
+    found = paths.cloud_folders()
+    labels = [f"{label}: {p}" for label, p in found] + ["Another folder..."]
+    c1, c2 = st.columns([3, 2])
+    choice = c1.selectbox("Cloud-drive folder", labels, key="sync_choice")
+    if choice == "Another folder...":
+        typed = c1.text_input("Folder path", key="sync_path",
+                              placeholder="e.g. /Users/you/Dropbox  or  C:\\Users\\you\\OneDrive")
+        base = Path(typed).expanduser() if typed.strip() else None
+    else:
+        base = found[labels.index(choice)][1]
+    target = base / paths.APP_NAME if base else None
+    if target:
+        c1.caption(f"Progress will be kept in `{target}`. If that folder already has progress from another "
+                   "computer, the two are merged (the newest change for each job wins).")
+    if c2.button("☁️ Use this folder", disabled=target is None or target == current, type="primary"):
+        if not target.parent.is_dir():
+            st.error(f"Folder not found: {target.parent}")
+        else:
+            ss.flash = A.move_progress(target)
+            st.rerun()
+    if paths.user_dir_is_custom() and c2.button("💻 Stop syncing (keep a copy on this computer only)"):
+        ss.flash = A.move_progress(paths.home_dir())
+        paths.set_user_dir(None)
+        st.rerun()
+
+
 def _report_sources(folder: Path) -> list[dict]:
     try:
         import json
@@ -540,7 +649,8 @@ def _report_sources(folder: Path) -> list[dict]:
 
 def page_data() -> None:
     st.title("⚙️ Data & sources")
-    where = "the weekly GitHub run (data/)" if DATA_DIR != LOCAL_DATA else "my_data/latest (download or local scrape)"
+    common_banners()
+    where = "the weekly GitHub run (data/)" if DATA_DIR != paths.latest_dir() else "my_data/latest (download or local scrape)"
     if REPORT:
         t = REPORT.get("totals", {})
         st.write(f"Showing data from **{where}**, run on **{REPORT.get('run_date', '?')}** — "
@@ -572,6 +682,8 @@ def page_data() -> None:
             with st.expander("Scraper output"):
                 st.code((proc.stdout or "")[-6000:] + (proc.stderr or "")[-4000:])
 
+    progress_folder_section()
+
     with st.expander("Advanced (optional): read job-alert e-mails automatically"):
         st.caption("Most people do not need this: the Add jobs page imports member-only boards from a saved page. "
                    "Use this only if you want alert e-mails (FMA, AMA, SSRN, listservs) read without any clicks.")
@@ -591,16 +703,16 @@ def page_data() -> None:
             if st.form_submit_button("Save on this computer"):
                 if user and pw:
                     save_email_credentials(user, pw)
-                    st.success(f"Saved to {EMAIL_ENV} (stays on this computer).")
+                    st.success(f"Saved to {paths.email_env()} (stays on this computer).")
                 else:
                     st.error("Enter both the address and the app password.")
         with m2:
-            configured = EMAIL_ENV.exists() or bool(os.environ.get("TRACKER_IMAP_USER"))  # after a save above
+            configured = paths.email_env().exists() or bool(os.environ.get("TRACKER_IMAP_USER"))  # after a save above
             st.write("Status: " + ("✅ mailbox configured" if configured else "not set up yet"))
             if st.button("📬 Check my e-mail alerts now", disabled=not configured):
                 with st.spinner("Reading the alert folder…"):
                     proc = run_local_scrape(["Email"])
-                note = next((s for s in _report_sources(LOCAL_DATA) if s["name"] == "Email"), {})
+                note = next((s for s in _report_sources(paths.latest_dir()) if s["name"] == "Email"), {})
                 if proc.returncode == 0 and note.get("ok", True):
                     st.success(f"Done: {note.get('new', 0)} new postings from e-mail.")
                     st.cache_data.clear()
@@ -638,17 +750,15 @@ def page_data() -> None:
     export_frame(DF).to_excel(buf, index=False, sheet_name="Jobs")
     e1.download_button("⬇️ All jobs + my statuses (Excel)", buf.getvalue(), f"job_market_{TODAY}.xlsx",
                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    if A.APPS_FILE.exists():
-        e2.download_button("💾 Back up my statuses (CSV)", A.APPS_FILE.read_bytes(),
+    if paths.apps_file().exists():
+        e2.download_button("💾 Back up my statuses (CSV)", paths.apps_file().read_bytes(),
                            f"applications_backup_{TODAY}.csv", mime="text/csv")
     up = e3.file_uploader("Restore statuses from a backup", type="csv")
     if up is not None and st.button("Restore this backup (replaces current statuses)"):
-        A.APPS_FILE.parent.mkdir(parents=True, exist_ok=True)
-        A.APPS_FILE.write_bytes(up.getvalue())
+        paths.apps_file().parent.mkdir(parents=True, exist_ok=True)
+        paths.apps_file().write_bytes(up.getvalue())
         st.success(f"Restored {len(A.load_applications())} tracked jobs.")
         st.rerun()
-    st.caption(f"Your statuses live in {A.APPS_FILE} on this computer only "
-               f"(never uploaded; a daily copy is kept in my_data/backups/).")
 
 
 PAGES = {

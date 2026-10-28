@@ -1,3 +1,8 @@
+[server]
+# Only this computer can open the app (Streamlit otherwise listens on every network interface,
+# so anyone on the same Wi-Fi could reach it).
+address = "localhost"
+
 [client]
 toolbarMode = "minimal"
 

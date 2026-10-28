@@ -1,4 +1,4 @@
-"""Your private application statuses (my_data/, never committed).
+"""Your private application statuses, in your progress folder (see tracker/paths.py; never committed).
 
 applications.csv  one row per job you have touched (ticks, dates, notes)
 manual_jobs.csv   postings you added yourself (from an email, a school website, ...)
@@ -14,14 +14,8 @@ import uuid
 from datetime import date, datetime
 from pathlib import Path
 
-from .config import DATA_ROOT
+from . import paths
 from .schema import APP_BOOL_COLUMNS, APP_COLUMNS, APP_DATE_COLUMNS, JOB_COLUMNS, STAGES
-
-MY_DATA = DATA_ROOT / "my_data"
-APPS_FILE = MY_DATA / "applications.csv"
-MANUAL_FILE = MY_DATA / "manual_jobs.csv"
-PREFS_FILE = MY_DATA / "preferences.json"
-BACKUP_DIR = MY_DATA / "backups"
 
 # Ticking a later stage implies the earlier ones.
 _IMPLIES = {"interview": ["applied"], "flyout": ["interview", "applied"], "offer": ["applied"]}
@@ -40,7 +34,8 @@ def blank_app(job_id: str) -> dict:
     return app
 
 
-def load_applications(path: Path = APPS_FILE) -> dict[str, dict]:
+def load_applications(path: Path | None = None) -> dict[str, dict]:
+    path = path or paths.apps_file()
     if not path.exists():
         return {}
     apps = {}
@@ -62,9 +57,10 @@ def is_empty(app: dict) -> bool:
         app.get(c) for c in [*APP_DATE_COLUMNS, "notes"])
 
 
-def save_applications(apps: dict[str, dict], path: Path = APPS_FILE) -> None:
+def save_applications(apps: dict[str, dict], path: Path | None = None) -> None:
+    path = path or paths.apps_file()
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(".tmp")
+    tmp = path.with_name(f".{path.name}.tmp")  # hidden, so sync services ignore it
     with tmp.open("w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=APP_COLUMNS)
         w.writeheader()
@@ -79,12 +75,13 @@ def save_applications(apps: dict[str, dict], path: Path = APPS_FILE) -> None:
 
 
 def _daily_backup(path: Path, keep: int = 60) -> None:
-    if path != APPS_FILE:
+    if path != paths.apps_file():
         return
-    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
-    target = BACKUP_DIR / f"applications-{date.today():%Y-%m-%d}.csv"
+    backups = paths.backup_dir()
+    backups.mkdir(parents=True, exist_ok=True)
+    target = backups / f"applications-{date.today():%Y-%m-%d}.csv"
     shutil.copyfile(path, target)
-    for old in sorted(BACKUP_DIR.glob("applications-*.csv"))[:-keep]:
+    for old in sorted(backups.glob("applications-*.csv"))[:-keep]:
         old.unlink(missing_ok=True)
 
 
@@ -144,16 +141,18 @@ def stage_of(app: dict | None) -> str:
 # Manually added jobs
 # ---------------------------------------------------------------------------
 
-def load_manual_jobs(path: Path = MANUAL_FILE) -> dict[str, dict]:
+def load_manual_jobs(path: Path | None = None) -> dict[str, dict]:
+    path = path or paths.manual_file()
     if not path.exists():
         return {}
     with path.open(newline="", encoding="utf-8") as fh:
         return {r["job_id"]: {c: r.get(c, "") or "" for c in JOB_COLUMNS} for r in csv.DictReader(fh)}
 
 
-def save_manual_jobs(jobs: dict[str, dict], path: Path = MANUAL_FILE) -> None:
+def save_manual_jobs(jobs: dict[str, dict], path: Path | None = None) -> None:
+    path = path or paths.manual_file()
     path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(".tmp")
+    tmp = path.with_name(f".{path.name}.tmp")
     with tmp.open("w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=JOB_COLUMNS, extrasaction="ignore")
         w.writeheader()
@@ -170,13 +169,83 @@ def new_manual_id() -> str:
 # Preferences
 # ---------------------------------------------------------------------------
 
-def load_prefs(path: Path = PREFS_FILE) -> dict:
+def load_prefs(path: Path | None = None) -> dict:
+    path = path or paths.prefs_file()
     try:
         return json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return {}
 
 
-def save_prefs(prefs: dict, path: Path = PREFS_FILE) -> None:
+def save_prefs(prefs: dict, path: Path | None = None) -> None:
+    path = path or paths.prefs_file()
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(prefs, indent=1), encoding="utf-8")
+
+
+# ---------------------------------------------------------------------------
+# Moving / merging the progress folder (cloud sync)
+# ---------------------------------------------------------------------------
+
+def _newer(a: dict, b: dict) -> dict:
+    return a if (a.get("updated_at") or "") >= (b.get("updated_at") or "") else b
+
+
+def merge_applications(*sets: dict[str, dict]) -> dict[str, dict]:
+    """Union of several application sets; for a job in more than one, the latest edit wins."""
+    out: dict[str, dict] = {}
+    for apps in sets:
+        for jid, app in apps.items():
+            out[jid] = _newer(app, out[jid]) if jid in out else app
+    return out
+
+
+def move_progress(target: Path) -> str:
+    """Point the progress folder at target (e.g. a cloud drive), merging with anything already there.
+
+    Returns a short description of what happened.
+    """
+    target = Path(target).expanduser()
+    target.mkdir(parents=True, exist_ok=True)
+    source = paths.user_dir()
+    here_apps, there_apps = load_applications(), load_applications(target / "applications.csv")
+    here_jobs, there_jobs = load_manual_jobs(), load_manual_jobs(target / "manual_jobs.csv")
+    merged = merge_applications(there_apps, here_apps)
+    save_applications(merged, target / "applications.csv")
+    save_manual_jobs({**there_jobs, **here_jobs}, target / "manual_jobs.csv")
+    if not (target / "preferences.json").exists() and paths.prefs_file().exists():
+        shutil.copyfile(paths.prefs_file(), target / "preferences.json")
+    paths.set_user_dir(target)
+    if source == paths.home_dir() and target != source:
+        # Leaving this computer's own folder: archive the old copies so there is one live copy.
+        # (A cloud folder is never emptied - other computers may still use it.)
+        archive = source / "backups"
+        archive.mkdir(parents=True, exist_ok=True)
+        for name in paths.PROGRESS_FILES:
+            if (source / name).exists():
+                (source / name).replace(archive / f"before-sync-{name}")
+    if there_apps and here_apps:
+        return f"Merged: {len(merged)} tracked jobs ({len(there_apps)} were already in that folder)."
+    if there_apps:
+        return f"Using the {len(there_apps)} tracked jobs already in that folder."
+    return f"Moved {len(here_apps)} tracked jobs there."
+
+
+def resolve_conflict_copies() -> int:
+    """Fold sync-conflict copies back into the main files, newest edit per job winning.
+    The copies are moved into backups/. Returns how many copies were merged."""
+    copies = paths.conflict_copies()
+    if not copies:
+        return 0
+    apps, jobs = load_applications(), load_manual_jobs()
+    backups = paths.backup_dir()
+    backups.mkdir(parents=True, exist_ok=True)
+    for c in copies:
+        if c.name.lower().startswith("applications"):
+            apps = merge_applications(apps, load_applications(c))
+        else:
+            jobs = {**load_manual_jobs(c), **jobs}
+        c.replace(backups / f"merged-{c.name}")
+    save_applications(apps)
+    save_manual_jobs(jobs)
+    return len(copies)
