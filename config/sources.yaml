@@ -2,20 +2,24 @@
 #
 #   kind: board          generic crawler: RSS/Atom feeds and/or listing pages, then each new
 #                        posting's page (schema.org JobPosting data + labeled fields + text)
+#   kind: joe            AEA JOE official XML export (all listings in one request)
 #   kind: econjobmarket  EconJobMarket's public JSON feed of open ads
 #
-#   filter: none      keep every posting (board only lists academic finance jobs, etc.)
+#   filter: none      keep every posting
 #           faculty   drop staff/administrative jobs
-#           business  faculty jobs in business-school fields only (for broad boards)
+#           business  faculty jobs at business schools / in business fields only (broad boards)
+#   feed_style        madgex (title "Employer: Job") | higheredjobs ("Institution (City)")
+#   feed_page_param   query parameter for feed page 2, 3, ...
+#   partial_listing   the feed shows only the newest N postings, so a posting missing from it
+#                     is not treated as closed (it closes on its deadline / listing expiry instead)
+#   verify_closures   false = the feed lists every open ad, so a missing ad is closed directly
+#   verified          date the configuration was last checked against the live site
 #
-#   job_link_pattern  regex matching a posting URL; group 1 is the board's posting id
-#   page_param        query parameter for page 2, 3, ... when no "next" link is found
-#   verified          date the URLs/patterns were last checked against the live site.
-#                     Entries with no date have not yet been confirmed; the Data & sources
-#                     tab in the app (and data/scrape_report.json) shows whether each works.
+# Boards marked "enabled: false" refuse automated access (bot challenge or member login).
+# Get their postings by email alert instead - see the "email" section in config/settings.yaml.
 
 sources:
-  # ---- Finance ---------------------------------------------------------------------
+  # ---- Finance -------------------------------------------------------------------------
   - name: AFA
     label: American Finance Association career center
     homepage: https://careers.afajof.org/
@@ -24,49 +28,36 @@ sources:
     default_field: Finance
     filter: faculty
     feeds: ["https://careers.afajof.org/jobsrss/"]
-    start_urls: ["https://careers.afajof.org/jobs/"]
+    feed_style: madgex
+    feed_page_param: Page
     job_link_pattern: 'careers\.afajof\.org/job/(\d+)'
-    page_param: Page
-    max_pages: 25
-    verified: ""
+    verified: "2026-10-28"
 
   - name: FMA
-    label: Financial Management Association placement (may require FMA member login)
-    homepage: https://www.fma.org/
+    label: Financial Management Association placement (members-only; use FMA job-alert emails)
+    homepage: https://www.fma.org/for-job-seekers
     kind: board
-    enabled: true
-    default_field: Finance
-    filter: faculty
-    start_urls: ["https://www.fma.org/placement"]
-    discover_feeds: true
-    job_link_pattern: 'fma\.org/[^#?]*?(?:job|position|listing|placement)s?[/=_-]+(\d{3,})'
-    max_pages: 10
-    verified: ""
+    enabled: false
+    verified: "2026-10-28"
 
-  # ---- Economics boards with many business-school postings ----------------------------
+  # ---- Economics boards with many business-school postings -------------------------------
   - name: JOE
-    label: AEA Job Openings for Economists
+    label: AEA Job Openings for Economists (business-school listings)
     homepage: https://www.aeaweb.org/joe/listings
-    kind: board
+    kind: joe
     enabled: true
-    filter: business
-    start_urls: ["https://www.aeaweb.org/joe/listings"]
-    job_link_pattern: 'JOE_ID=([\w-]+)'
-    page_param: page
-    max_pages: 100
-    max_new_details: 600
-    verified: ""
+    verified: "2026-10-28"
 
   - name: EJM
-    label: EconJobMarket
+    label: EconJobMarket (business-school listings)
     homepage: https://econjobmarket.org/positions
     kind: econjobmarket
     enabled: true
     api_url: https://backend.econjobmarket.org/data/zz_public/json/Ads
     verify_closures: false   # the feed lists every open ad, so a missing ad is closed
-    verified: ""
+    verified: "2026-10-28"
 
-  # ---- Other business disciplines (association career centers) -----------------------
+  # ---- Accounting --------------------------------------------------------------------------
   - name: AAA
     label: American Accounting Association career center
     homepage: https://careercenter.aaahq.org/
@@ -74,139 +65,193 @@ sources:
     enabled: true
     default_field: Accounting
     filter: faculty
-    start_urls: ["https://careercenter.aaahq.org/jobs/"]
-    discover_feeds: true
-    job_link_pattern: '/jobs/(\d{5,})'
-    page_param: page
-    max_pages: 20
-    verified: ""
+    feeds: ["https://careercenter.aaahq.org/jobsrss/"]
+    feed_style: madgex
+    feed_page_param: Page
+    job_link_pattern: 'careercenter\.aaahq\.org/job/(\d+)'
+    verified: "2026-10-28"
 
-  - name: AMA
-    label: American Marketing Association academic placement
-    homepage: https://academicplacement.ama.org/
-    kind: board
-    enabled: true
-    default_field: Marketing
-    filter: faculty
-    start_urls: ["https://academicplacement.ama.org/jobs/"]
-    discover_feeds: true
-    job_link_pattern: '/jobs/(\d{5,})'
-    page_param: page
-    max_pages: 20
-    verified: ""
-
-  - name: AOM
-    label: Academy of Management career center
-    homepage: https://careers.aom.org/
-    kind: board
-    enabled: true
-    default_field: Management & Strategy
-    filter: faculty
-    start_urls: ["https://careers.aom.org/jobs/"]
-    discover_feeds: true
-    job_link_pattern: '/jobs/(\d{5,})'
-    page_param: page
-    max_pages: 25
-    verified: ""
-
-  - name: INFORMS
-    label: INFORMS career center (operations, analytics)
-    homepage: https://careercenter.informs.org/
-    kind: board
-    enabled: true
-    filter: business
-    start_urls: ["https://careercenter.informs.org/jobs/"]
-    discover_feeds: true
-    job_link_pattern: '/jobs/(\d{5,})'
-    page_param: page
-    max_pages: 20
-    verified: ""
-
-  - name: AIS
-    label: Association for Information Systems academic careers
-    homepage: https://academiccareers.aisnet.org/
-    kind: board
-    enabled: true
-    default_field: Information Systems
-    filter: faculty
-    start_urls: ["https://academiccareers.aisnet.org/jobs/"]
-    discover_feeds: true
-    job_link_pattern: '/jobs/(\d{5,})'
-    page_param: page
-    max_pages: 15
-    verified: ""
-
-  # ---- General academic boards (business-school jobs only) ----------------------------
-  - name: jobs.ac.uk
-    label: jobs.ac.uk (UK and international)
-    homepage: https://www.jobs.ac.uk/
-    kind: board
-    enabled: true
-    filter: business
-    feed_index:
-      - https://www.jobs.ac.uk/feeds/subject-areas/business-and-management-studies
-      - https://www.jobs.ac.uk/feeds/subject-areas/economics
-    feed_index_filter: 'accountancy|finance|marketing|management|business|economics|real estate|human resources'
-    job_link_pattern: 'jobs\.ac\.uk/job/([A-Za-z0-9]+)'
-    verified: ""
-
+  # ---- General academic boards (business-school jobs only) -------------------------------
   - name: Chronicle
-    label: Chronicle of Higher Education jobs (business)
-    homepage: https://jobs.chronicle.com/
+    label: Chronicle of Higher Education jobs (business & management faculty)
+    homepage: https://jobs.chronicle.com/jobs/business-and-management/
     kind: board
     enabled: true
     filter: business
-    start_urls: ["https://jobs.chronicle.com/jobs/business/"]
-    discover_feeds: true
+    feeds: ["https://jobs.chronicle.com/jobsrss/?PositionType=9&Keywords=professor"]
+    feed_style: madgex
+    feed_page_param: Page
     job_link_pattern: 'jobs\.chronicle\.com/job/(\d+)'
-    page_param: Page
-    max_pages: 15
-    verified: ""
+    verified: "2026-10-28"
 
   - name: InsideHigherEd
-    label: Inside Higher Ed careers (business & management)
-    homepage: https://careers.insidehighered.com/
+    label: Inside Higher Ed careers (business & management faculty)
+    homepage: https://careers.insidehighered.com/jobs/business-and-management/
     kind: board
     enabled: true
     filter: business
-    start_urls: ["https://careers.insidehighered.com/jobs/business-and-management/"]
-    discover_feeds: true
+    feeds: ["https://careers.insidehighered.com/jobsrss/?FacultyJobs=39"]
+    feed_style: madgex
+    feed_page_param: Page
     job_link_pattern: 'careers\.insidehighered\.com/job/(\d+)'
-    page_param: Page
+    verified: "2026-10-28"
+
+  - name: THE
+    label: Times Higher Education unijobs (business & economics; UK, Europe, Asia, Australia)
+    homepage: https://www.timeshighereducation.com/unijobs/listings/business-and-economics/
+    kind: board
+    enabled: true
+    filter: business
+    # robots.txt disallows THE's RSS feed but allows the listing pages
+    start_urls: ["https://www.timeshighereducation.com/unijobs/listings/business-and-economics/"]
     max_pages: 15
-    verified: ""
+    job_link_pattern: 'timeshighereducation\.com/unijobs/listing/(\d+)'
+    verified: "2026-10-28"
+
+  - name: HigherEdJobs
+    label: HigherEdJobs business faculty categories
+    homepage: https://www.higheredjobs.com/faculty/
+    kind: board
+    enabled: true
+    filter: business
+    feed_style: higheredjobs
+    fetch_details: false    # posting pages answer with a bot check; the feed gives title, school, place
+    partial_listing: true   # each category feed shows only its newest 100 postings
+    feeds:
+      - "https://www.higheredjobs.com/rss/categoryFeed.cfm?catID=44"    # Finance
+      - "https://www.higheredjobs.com/rss/categoryFeed.cfm?catID=45"    # Accounting
+      - "https://www.higheredjobs.com/rss/categoryFeed.cfm?catID=46"    # Management
+      - "https://www.higheredjobs.com/rss/categoryFeed.cfm?catID=47"    # Marketing and Sales
+      - "https://www.higheredjobs.com/rss/categoryFeed.cfm?catID=144"   # Information Systems
+      - "https://www.higheredjobs.com/rss/categoryFeed.cfm?catID=285"   # Business Analytics
+      - "https://www.higheredjobs.com/rss/categoryFeed.cfm?catID=286"   # Real Estate
+      - "https://www.higheredjobs.com/rss/categoryFeed.cfm?catID=255"   # Entrepreneurship
+      - "https://www.higheredjobs.com/rss/categoryFeed.cfm?catID=229"   # International Business
+      - "https://www.higheredjobs.com/rss/categoryFeed.cfm?catID=203"   # Human Resources
+      - "https://www.higheredjobs.com/rss/categoryFeed.cfm?catID=228"   # Business Law
+      - "https://www.higheredjobs.com/rss/categoryFeed.cfm?catID=256"   # Business Administration
+      - "https://www.higheredjobs.com/rss/categoryFeed.cfm?catID=48"    # Other Business
+    job_link_pattern: 'JobCode=(\d+)'
+    verified: "2026-10-28"
 
   - name: AJO
-    label: AcademicJobsOnline
+    label: AcademicJobsOnline (business-school listings)
     homepage: https://academicjobsonline.org/ajo/jobs
     kind: board
     enabled: true
     filter: business
-    start_urls: ["https://academicjobsonline.org/ajo/jobs"]
-    job_link_pattern: 'academicjobsonline\.org/ajo/jobs/(\d+)'
+    fetch_details: false     # the feed already carries the full ad text
+    feeds: ["https://academicjobsonline.org/ajo?joblist-0-0-0-----rss--"]
+    feed_fields:
+      institution: ads_univ
+      department: ads_dept
+      deadline_raw: ads_deadline
+      country: ads_country
+      location: ads_city
+      categories: ads_disciplines
+    job_link_pattern: 'academicjobsonline\.org/ajo/.*?/(\d+)(?:\?rss)?$'
+    verified: "2026-10-28"
+
+  # ---- China / Greater China ------------------------------------------------------------
+  - name: CES
+    label: Chinese Economists Society job board (positions in China)
+    homepage: https://www.china-ces.org/Job/Default.aspx
+    kind: board
+    enabled: true
+    filter: faculty
+    start_urls: ["https://www.china-ces.org/Job/Default.aspx"]
+    job_link_pattern: 'ShowJob\.aspx\?ID=(\d+)'
     max_pages: 1
+    verified: "2026-10-28"
+
+  - name: SJTU-Antai
+    label: 上海交大安泰经管学院 师资招聘 (SJTU Antai faculty recruitment)
+    homepage: https://acem.sjtu.edu.cn/faculty/teacher.html
+    kind: board
+    enabled: true
+    filter: faculty
+    start_urls: ["https://acem.sjtu.edu.cn/faculty/teacher.html"]
+    default_institution: Shanghai Jiao Tong University, Antai College of Economics and Management
+    job_link_pattern: 'acem\.sjtu\.edu\.cn/acem/hr/(\d+)\.html'
+    max_pages: 1
+    partial_listing: true   # the page lists the current year's notices only
+    verified: "2026-10-28"
+
+  - name: EFN-China
+    label: 中国经济学教育科研网 招聘·教学研究 (efnchina.com faculty notices)
+    homepage: https://www.efnchina.com/zp/jxyj.htm
+    kind: board
+    enabled: true
+    filter: business
+    start_urls: ["https://www.efnchina.com/zp/jxyj.htm"]
+    job_link_pattern: 'efnchina\.com/info/1111/(\d+)\.htm'
+    max_pages: 1
+    partial_listing: true
+    verified: "2026-10-28"
+
+  - name: School-pages
+    label: Standing faculty-recruitment pages of selected schools (flagged when they change)
+    kind: pages
+    enabled: true
+    pages:
+      - url: https://www.sem.tsinghua.edu.cn/en/Faculty/Recruitment.htm
+        institution: Tsinghua University School of Economics and Management
+        title: Faculty positions (all departments)
+        location: Beijing, China
+        field: Other / General Business
+      - url: https://eng.pbcsf.tsinghua.edu.cn/Faculty/Recruitment/Tenure_Track.htm
+        institution: Tsinghua University PBC School of Finance
+        title: Tenure-track faculty positions in finance and economics
+        location: Beijing, China
+        field: Finance
+      - url: https://saif.sjtu.edu.cn/sxy_mobile/content/page/1771.html
+        institution: Shanghai Advanced Institute of Finance (SAIF), SJTU
+        title: Faculty positions at all ranks
+        location: Shanghai, China
+        field: Finance
+    verified: "2026-10-28"
+
+  # ---- Your mailbox: job-alert e-mails, SSRN announcements, listservs --------------------
+  # Reads one folder/label over IMAP (settings: config/settings.yaml -> email). Does nothing
+  # until TRACKER_IMAP_USER / TRACKER_IMAP_PASSWORD are provided; see README "Email alerts".
+  - name: Email
+    label: Job-alert e-mails, SSRN announcements and listservs from your mailbox
+    kind: email
+    enabled: true
     verified: ""
 
-  # Disabled until their listing URLs are confirmed; enable and adjust when ready.
-  - name: HigherEdJobs
-    label: HigherEdJobs (business faculty)
-    homepage: https://www.higheredjobs.com/
+  # ---- Boards that block automated access: use their email job alerts ---------------------
+  - name: AMA
+    label: AMA academic placement (bot challenge; use AMA job-alert emails)
+    homepage: https://academicplacement.ama.org/
     kind: board
     enabled: false
-    filter: business
-    start_urls: ["https://www.higheredjobs.com/faculty/search.cfm?JobCat=48"]
-    job_link_pattern: 'details\.cfm\?JobCode=(\d+)'
-    max_pages: 10
-    verified: ""
+    verified: "2026-10-28"
 
-  - name: AcademicPositions
-    label: AcademicPositions (Europe)
-    homepage: https://academicpositions.com/
+  - name: AOM
+    label: Academy of Management career center (bot challenge; use job-alert emails)
+    homepage: https://career-center.aom.org/
     kind: board
     enabled: false
-    filter: business
-    start_urls: ["https://academicpositions.com/jobs/field/business"]
-    job_link_pattern: 'academicpositions\.com/ad/[^/]+/\d+/([\w-]+)'
-    page_param: page
-    max_pages: 10
-    verified: ""
+    verified: "2026-10-28"
+
+  - name: INFORMS
+    label: INFORMS career center (bot challenge; use job-alert emails)
+    homepage: https://careercenter.informs.org/
+    kind: board
+    enabled: false
+    verified: "2026-10-28"
+
+  - name: AIS
+    label: AIS academic careers (bot challenge; use job-alert emails)
+    homepage: https://academiccareers.aisnet.org/
+    kind: board
+    enabled: false
+    verified: "2026-10-28"
+
+  - name: jobs.ac.uk
+    label: jobs.ac.uk (bot challenge; use "Jobs by Email")
+    homepage: https://www.jobs.ac.uk/search/business-and-management-studies
+    kind: board
+    enabled: false
+    verified: "2026-10-28"

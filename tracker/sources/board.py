@@ -1,10 +1,10 @@
 """Generic job-board adapter driven by config/sources.yaml.
 
-Collects job links from RSS/Atom feeds and/or paginated listing pages, then
-fetches detail pages only for postings not seen before. Works for Madgex
-boards (AFA, Chronicle, Inside Higher Ed), YM Careers boards (AAA, AMA, AOM,
-INFORMS, AIS), jobs.ac.uk, AEA JOE and similar sites without per-site code;
-per-site differences live in the YAML entry.
+Collects postings from RSS/Atom/RDF feeds (optionally paginated) and/or
+paginated listing pages, then fetches detail pages only for postings not seen
+before. Works for Madgex boards (AFA, AAA, Chronicle, Inside Higher Ed, Times
+Higher Education), HigherEdJobs category feeds, AcademicJobsOnline and
+similar sites without per-site code; per-site differences live in the YAML.
 """
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ import re
 import time
 from urllib.parse import parse_qsl, urlencode, urljoin, urlparse, urlunparse
 
-from ..classify import BUSINESS_FIELDS, _field_hits, is_business_school, is_faculty_position
+from ..classify import _field_hits, business_relevance, is_faculty_position
 from ..extract import clean_text, extract_posting, html_to_text, soupify
 from ..http import Fetcher, FetchError
 from .base import RawJob, SourceResult, stable_id
@@ -23,20 +23,62 @@ log = logging.getLogger(__name__)
 _NEXT_TEXT = re.compile(r"^\s*(next|next page|next ›|next »|›|»|>|>>|more results|older)\s*$", re.I)
 _BLOCK_HINT = re.compile(r"job|result|listing|lister|item|posting|vacanc|position|row|card", re.I)
 
+_OTHER_SUBJECT = re.compile(
+    r"econom|polic|psycholog|sociolog|politic|histor|engineer|comput|biolog|chemi|physic|math|nurs|health|educat|"
+    r"law\b|english|language|music|art\b|arts\b|design|communication|journalism|social work|criminal|philosoph|"
+    r"anthropolog|geograph|environment|agricult|medic|pharm|kinesiolog|theat|film|religio", re.I)
 
-def _set_param(url: str, key: str, value) -> str:
+# Fields a candidate can carry from a feed or listing into the RawJob.
+_CAND_FIELDS = ("institution", "department", "location", "country", "categories", "deadline_raw", "posted_date",
+                "listing_expires", "salary_label", "start_date_raw")
+
+
+def set_param(url: str, key: str, value) -> str:
     p = urlparse(url)
     q = [(k, v) for k, v in parse_qsl(p.query, keep_blank_values=True) if k != key]
     q.append((key, str(value)))
     return urlunparse(p._replace(query=urlencode(q)))
 
 
-def looks_business(title: str, context: str = "") -> bool:
-    """Business-school relevance from a title plus nearby listing text."""
-    hits = _field_hits(f"{title} {context[:700]}")
-    if any(f in hits for f in BUSINESS_FIELDS):
-        return True
-    return is_business_school(title, context[:700])
+def clean_anchor_title(text: str) -> str:
+    """Listing links often wrap date + title + teaser; keep the first real line."""
+    for line in clean_text(text).splitlines():
+        line = line.strip(" |·-–")
+        if len(line) < 4 or re.fullmatch(r"[\d\s./:年月日-]+", line):
+            continue
+        return line[:200]
+    return ""
+
+
+def parse_madgex_entry(title: str, summary: str) -> dict:
+    """Madgex feeds: title 'Employer: Job title'; description lines
+    'Salary text:' / 'Employer:' / snippet / location."""
+    out: dict = {}
+    if ": " in title:
+        inst, title = title.split(": ", 1)
+        out["institution"] = inst.strip()
+    out["title"] = title.strip()
+    lines = [ln.strip() for ln in summary.splitlines() if ln.strip()]
+    inst = out.get("institution", "")
+    if lines and lines[0].endswith(":") and lines[0][:-1].strip() != inst:
+        out["salary_label"] = lines[0][:-1].strip()
+        lines = lines[1:]
+    if lines and lines[0].endswith(":") and len(lines[0]) < 160:
+        lines = lines[1:]  # employer line
+    if len(lines) >= 2:
+        out["location"] = lines[-1]
+        out["summary"] = " ".join(lines[:-1])
+    elif lines:
+        out["summary"] = lines[0]
+    return out
+
+
+def parse_hej_entry(title: str, summary: str) -> dict:
+    """HigherEdJobs feeds: description 'Institution (City, ST)'."""
+    m = re.match(r"^(.*?)\s*\(([^()]*)\)\s*$", summary.strip())
+    if m:
+        return {"title": title, "institution": m.group(1).strip(), "location": m.group(2).strip(), "summary": ""}
+    return {"title": title, "institution": summary.strip(), "summary": ""}
 
 
 class BoardSource:
@@ -49,6 +91,7 @@ class BoardSource:
         self.max_pages = int(cfg.get("max_pages", 10))
         self.max_new = int(cfg.get("max_new_details", self.settings.get("max_new_details_per_source", 300)))
         self.filter = cfg.get("filter", "none")  # none | faculty | business
+        self.blocked = 0  # consecutive bot-protection answers on detail pages
 
     # -- link collection ---------------------------------------------------
 
@@ -57,7 +100,7 @@ class BoardSource:
             m = self.link_re.search(url)
             if m and m.groups() and m.group(1):
                 return m.group(1)
-        return stable_id(url.split("#")[0].rstrip("/"))
+        return stable_id(url.split("#")[0].split("?")[0].rstrip("/"))
 
     def _context(self, a) -> str:
         node = a
@@ -80,7 +123,7 @@ class BoardSource:
             if not self.link_re or not self.link_re.search(href):
                 continue
             sid = self._source_id(href)
-            title = clean_text(a.get_text(" ")) or clean_text(a.get("title") or "")
+            title = clean_anchor_title(a.get_text("\n")) or clean_text(a.get("title") or "")
             prev = found.get(sid)
             if prev is None or len(title) > len(prev["title"]):
                 found[sid] = {"source_id": sid, "url": href.split("#")[0], "title": title,
@@ -110,42 +153,36 @@ class BoardSource:
         parsed = feedparser.parse(r.content)
         if parsed.bozo and not parsed.entries:
             raise FetchError(feed_url, "not a valid RSS/Atom feed")
+        style = self.cfg.get("feed_style", "")
+        mapping = self.cfg.get("feed_fields") or {}
         out = []
         for e in parsed.entries:
-            link = e.get("link") or ""
+            link = (e.get("link") or "").strip()
             if not link or (self.link_re and not self.link_re.search(link)):
                 continue  # not a job posting (site news feed, etc.)
+            title = clean_text(e.get("title") or "")
             summary = html_to_text(e.get("summary") or e.get("description") or "")
-            published = ""
-            if e.get("published_parsed"):
-                published = time.strftime("%Y-%m-%d", e.published_parsed)
-            out.append({"source_id": self._source_id(link), "url": link, "title": clean_text(e.get("title") or ""),
-                        "context": summary[:1500], "posted_date": published, "summary": summary})
+            cand = {"source_id": self._source_id(link), "url": link, "title": title, "summary": summary,
+                    "from_feed": True}
+            if style == "madgex":
+                cand.update(parse_madgex_entry(title, summary))
+            elif style == "higheredjobs":
+                cand.update(parse_hej_entry(title, summary))
+            for key, feed_key in mapping.items():
+                val = e.get(feed_key)
+                if val:
+                    cand[key] = clean_text(str(val))
+            if e.get("published_parsed") and not cand.get("posted_date"):
+                cand["posted_date"] = time.strftime("%Y-%m-%d", e.published_parsed)
+            cand["context"] = " ".join(x for x in (cand.get("institution", ""), cand.get("department", ""),
+                                                   cand.get("summary", "")) if x)[:1500]
+            out.append(cand)
         return out
 
     def _discover_feeds(self, html: bytes | str, base_url: str) -> list[str]:
         soup = soupify(html)
-        feeds = []
-        for link in soup.find_all("link", attrs={"type": re.compile(r"(rss|atom)\+xml", re.I)}):
-            if link.get("href"):
-                feeds.append(urljoin(base_url, link["href"]))
-        return feeds
-
-    def _feeds_from_index(self, index_url: str, pattern: str) -> list[str]:
-        r = self.fetcher.get(index_url)
-        soup = soupify(r.content)
-        rx = re.compile(pattern, re.I) if pattern else None
-        feeds = []
-        for a in soup.find_all("a", href=True):
-            href = urljoin(index_url, a["href"])
-            if not re.search(r"rss|feed|\.xml|atom", href, re.I) or href.rstrip("/") == index_url.rstrip("/"):
-                continue
-            label = clean_text(a.get_text(" ")) + " " + href
-            if rx is None or rx.search(label):
-                feeds.append(href)
-        return list(dict.fromkeys(feeds))
-
-    # -- main ----------------------------------------------------------------
+        return [urljoin(base_url, ln["href"]) for ln in
+                soup.find_all("link", attrs={"type": re.compile(r"(rss|atom)\+xml", re.I)}) if ln.get("href")]
 
     def collect(self, result: SourceResult) -> list[dict]:
         cfg = self.cfg
@@ -153,16 +190,17 @@ class BoardSource:
         errors: list[str] = []
         truncated = False
 
-        feed_urls = list(cfg.get("feeds") or [])
-        indexes = cfg.get("feed_index") or []
-        for index in [indexes] if isinstance(indexes, str) else indexes:
-            try:
-                found = self._feeds_from_index(index, cfg.get("feed_index_filter", ""))
-                result.notes.append(f"{len(found)} feeds found on {index}")
-                feed_urls += [f for f in found if f not in feed_urls]
-            except FetchError as exc:
-                errors.append(f"feed index {index}: {exc.reason}")
+        def add(c: dict) -> bool:
+            prev = candidates.get(c["source_id"])
+            if prev is None:
+                candidates[c["source_id"]] = c
+                return True
+            for k, v in c.items():
+                if v and not prev.get(k):
+                    prev[k] = v
+            return False
 
+        feed_urls = list(cfg.get("feeds") or [])
         for start in cfg.get("start_urls") or []:
             url, page_no, seen_pages = start, 1, set()
             while url and url not in seen_pages:
@@ -180,32 +218,38 @@ class BoardSource:
                     errors.append(f"listing {url}: HTTP {r.status_code}")
                     break
                 result.pages += 1
-                links = self._links_from_page(r.content, r.url)
-                new = [c for c in links if c["source_id"] not in candidates]
-                for c in links:
-                    candidates.setdefault(c["source_id"], c)
+                new = [c for c in self._links_from_page(r.content, r.url) if add(c)]
                 if page_no == 1 and cfg.get("discover_feeds"):
                     feed_urls += [f for f in self._discover_feeds(r.content, r.url) if f not in feed_urls]
                 nxt = self._next_page(r.content, r.url)
                 if not nxt and cfg.get("page_param") and new:
-                    nxt = _set_param(start, cfg["page_param"], page_no + int(cfg.get("page_step", 1)))
+                    nxt = set_param(start, cfg["page_param"], page_no + 1)
                 if not new and page_no > 1:
                     break
                 url, page_no = nxt, page_no + 1
 
+        page_param = cfg.get("feed_page_param")
+        feed_max = int(cfg.get("feed_max_pages", 40 if page_param else 1))
         for feed in dict.fromkeys(feed_urls):
-            try:
-                entries = self._feed_entries(feed)
-                result.notes.append(f"feed {feed}: {len(entries)} items")
-                for e in entries:
-                    prev = candidates.get(e["source_id"])
-                    if prev is None:
-                        candidates[e["source_id"]] = e
-                    else:
-                        for k in ("posted_date", "summary"):
-                            prev.setdefault(k, e.get(k, ""))
-            except FetchError as exc:
-                errors.append(f"feed {feed}: {exc.reason}")
+            page, url, n_items = 1, feed, 0
+            while True:
+                try:
+                    entries = self._feed_entries(url)
+                except FetchError as exc:
+                    errors.append(f"feed {url}: {exc.reason}")
+                    break
+                result.pages += 1
+                n_items += len(entries)
+                new = [e for e in entries if add(e)]
+                if not page_param or not entries or not new:
+                    break
+                page += 1
+                if page > feed_max:
+                    truncated = True
+                    result.notes.append(f"stopped at feed_max_pages={feed_max} for {feed}")
+                    break
+                url = set_param(feed, page_param, page)
+            result.notes.append(f"feed {feed}: {n_items} items over {page} page(s)")
 
         if errors:
             result.notes.extend(errors)
@@ -213,20 +257,27 @@ class BoardSource:
             result.ok = False
             result.error = errors[0] if errors else "no job links found (page layout may have changed)"
         # Missing jobs are only closed when every listing page and feed was read.
-        result.complete = bool(candidates) and not errors and not truncated
+        result.complete = bool(candidates) and not errors and not truncated and not cfg.get("partial_listing")
         return list(candidates.values())
 
+    # -- filtering and details ----------------------------------------------
+
     def keep(self, cand: dict) -> bool:
-        """Cheap pre-filter on listing text, before any detail page is fetched."""
+        """Cheap pre-filter on listing/feed text, before any detail page is fetched."""
         if self.filter == "none":
             return True
         title, ctx = cand.get("title", ""), cand.get("context", "")
         if not is_faculty_position(title, ctx):
             return False
-        if self.filter != "business" or len(ctx) < 40:
-            # Without listing context the business check waits for the detail page.
+        if self.filter != "business":
             return True
-        return looks_business(title, ctx)
+        if business_relevance(title, cand.get("institution", ""), cand.get("department", ""),
+                              cand.get("categories", ""), cand.get("summary") or ctx):
+            return True
+        # A title naming no subject at all ("Assistant Professor", "Faculty Openings") is decided
+        # on the full posting; one naming another subject ("... of Psychology") is dropped here.
+        generic = not _field_hits(title) and not _OTHER_SUBJECT.search(title)
+        return (generic or len(ctx) < 40) and self.cfg.get("fetch_details", True)
 
     def run(self, known_ids: set[str]) -> SourceResult:
         t0 = time.monotonic()
@@ -242,7 +293,7 @@ class BoardSource:
             if not self.keep(cand):
                 result.skipped_filtered += 1
                 continue
-            if result.details_fetched >= self.max_new:
+            if self.cfg.get("fetch_details", True) and result.details_fetched >= self.max_new:
                 deferred += 1  # picked up next run; known jobs above still count as seen
                 continue
             job = self._detail(cand, result)
@@ -257,8 +308,9 @@ class BoardSource:
     def _detail(self, cand: dict, result: SourceResult) -> RawJob | None:
         job = RawJob(source=self.name, source_id=cand["source_id"], url=cand["url"],
                      title=cand.get("title", ""), description=cand.get("summary") or cand.get("context", ""),
-                     posted_date=cand.get("posted_date", ""), default_field=self.cfg.get("default_field", ""))
-        if self.cfg.get("fetch_details", True):
+                     default_field=self.cfg.get("default_field", ""),
+                     **{k: cand.get(k, "") for k in _CAND_FIELDS})
+        if self.cfg.get("fetch_details", True) and self.blocked < 3:
             try:
                 r = self.fetcher.get(cand["url"])
                 result.details_fetched += 1
@@ -269,35 +321,48 @@ class BoardSource:
                 if d.get("closed_hint") and not d.get("has_jsonld"):
                     result.skipped_ids.append(job.job_id)
                     return None
-                job.title = d["title"] if len(d["title"] or "") >= 6 else job.title
-                job.institution = d["institution"]
-                job.department = d["department"]
-                job.location = d["location"]
-                job.country = d["country"]
+                # Feed titles are clean; listing link text is often not, so the page title wins there.
+                if len(d["title"] or "") >= 6 and (not job.title or not cand.get("from_feed")):
+                    job.title = d["title"]
                 if len(d["description"]) > len(job.description):
                     job.description = d["description"]
-                job.posted_date = d["posted_date"] or job.posted_date
-                job.listing_expires = d["listing_expires"]
-                job.deadline_raw = d["deadline_raw"]
-                job.salary_label = d["salary_label"]
-                job.categories = d["categories"]
-                job.start_date_raw = d["start_date_raw"]
+                for k in ("institution", "department", "location", "country", "categories", "posted_date",
+                          "listing_expires", "start_date_raw", "salary_label"):
+                    if d.get(k):
+                        setattr(job, k, d[k])
+                if d.get("deadline_raw"):
+                    job.deadline_raw = d["deadline_raw"]
                 for k in ("salary_min", "salary_max", "salary_currency", "salary_text"):
                     if d.get(k):
                         setattr(job, k, d[k])
+                self.blocked = 0
             except FetchError as exc:
                 job.detail_error = exc.reason
                 result.notes.append(f"detail {cand['url']}: {exc.reason}")
+                if "bot protection" in exc.reason:
+                    self.blocked += 1
+                    if self.blocked == 3:
+                        result.notes.append("posting pages are bot-protected: using feed data only from here on")
         if not job.institution:
-            job.institution = _institution_from_context(cand.get("context", ""), job.title)
-        # A board-level filter may need the full text (e.g. JOE titles are just "Assistant Professor").
-        if self.filter == "business" and not looks_business(job.title, " ".join(
-                [job.institution, job.department, job.categories, job.description[:1500]])):
+            job.institution = (self.cfg.get("default_institution") or institution_from_text(job.title)
+                               or _institution_from_context(cand.get("context", ""), job.title))
+        # Re-check relevance with the full text (e.g. titles that are just "Assistant Professor").
+        if self.filter == "business" and not business_relevance(
+                job.title, job.institution, job.department, job.categories, job.description):
             result.skipped_filtered += 1
             if not job.detail_error:
                 result.skipped_ids.append(job.job_id)
             return None
         return job
+
+
+_ZH_INST = re.compile(r"[\u4e00-\u9fa5]{2,10}大学(?:[\u4e00-\u9fa5]{2,12}?(?:学院|研究院))?|[\u4e00-\u9fa5]{2,12}(?:商学院|管理学院)")
+
+
+def institution_from_text(text: str) -> str:
+    """Chinese notices name the school in the title: 西南财经大学经济学院教师招聘公告 → 西南财经大学经济学院."""
+    m = _ZH_INST.search(text or "")
+    return m.group(0) if m else ""
 
 
 def _institution_from_context(context: str, title: str) -> str:

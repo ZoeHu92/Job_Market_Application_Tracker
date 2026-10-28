@@ -14,8 +14,8 @@ import pandas as pd
 import streamlit as st
 
 from tracker import applications as A
-from tracker.appdata import (LOCAL_DATA, data_is_stale, download_latest, newest_data_dir, read_jobs_frame,
-                             run_local_scrape)
+from tracker.appdata import (EMAIL_ENV, LOCAL_DATA, data_is_stale, download_latest, load_jobs_union,
+                             newest_data_dir, run_local_scrape, save_email_credentials)
 from tracker.classify import fmt_date
 from tracker.config import load_settings, load_sources
 from tracker.enrich import enrich
@@ -52,13 +52,18 @@ if "auto_checked" not in ss and not os.environ.get("TRACKER_NO_AUTO_UPDATE"):
 
 
 @st.cache_data(show_spinner=False)
-def _jobs_cached(folder: str, mtime: float) -> pd.DataFrame:
-    return read_jobs_frame(Path(folder))
+def _jobs_cached(stamp: tuple) -> tuple[pd.DataFrame, dict, str]:
+    jobs, report, folder = load_jobs_union()
+    return jobs, report, str(folder)
 
 
-DATA_DIR, REPORT = newest_data_dir()
-_jobs_path = DATA_DIR / "jobs.csv"
-JOBS = _jobs_cached(str(DATA_DIR), _jobs_path.stat().st_mtime if _jobs_path.exists() else 0.0)
+def _stamp() -> tuple:
+    return tuple(p.stat().st_mtime if p.exists() else 0.0
+                 for p in (A.MY_DATA.parent / "data" / "jobs.csv", LOCAL_DATA / "jobs.csv"))
+
+
+JOBS, REPORT, _folder = _jobs_cached(_stamp())
+DATA_DIR = Path(_folder)
 APPS = A.load_applications()
 MANUAL = A.load_manual_jobs()
 DF = build_frame(JOBS, MANUAL, APPS, TODAY)
@@ -330,7 +335,7 @@ def page_details() -> None:
     st.markdown(f"**{r['institution']}**" + (f" · {r['department']}" if r["department"] else "")
                 + (f" · {r['location'] or r['country']}" if (r["location"] or r["country"]) else ""))
     badges = st.container(horizontal=True)
-    badges.badge(r["status_disp"], color="green" if "Open" in r["status_disp"] or "New" in r["status_disp"] else "gray")
+    badges.badge(r["status_disp"], color="green" if r["status"] == "Open" else "gray")
     badges.badge(r["field"], color="blue")
     badges.badge(r["rank"], color="violet")
     if r["tenure_track"] == "Yes":
@@ -425,6 +430,41 @@ def page_add() -> None:
             st.success("Filled in what could be found — please check every field.")
         except FetchError as exc:
             st.error(f"Could not load the page ({exc.reason}). Fill in the form by hand.")
+    with st.expander("…or paste the posting text (listserv e-mail, PDF, WeChat article)"):
+        pasted = st.text_area("Posting text", key="add_text", height=180,
+                              placeholder="Paste the whole announcement here; the first line is used as the title.")
+        if st.button("Fill the form from this text", disabled=not pasted.strip()):
+            lines = [ln.strip() for ln in pasted.strip().splitlines() if ln.strip()]
+            from tracker.sources.board import institution_from_text
+            raw = RawJob(source="Manual", source_id="new", url="", title=lines[0][:200],
+                         institution=institution_from_text(pasted[:400]), description=pasted)
+            ss.add_prefill = enrich(raw, TODAY, keep_description=True)
+            st.success("Filled in what could be found — please check every field.")
+    with st.expander("…or import a saved job-board page (FMA and other member-only boards)"):
+        st.caption("Log in to the board in your browser, open its job list, save the page (Ctrl/Cmd + S, "
+                   "\"Webpage, HTML only\"), then upload the file here. Every faculty posting on the page is added; "
+                   "postings you already imported are skipped.")
+        board = st.text_input("Board name", "FMA", key="import_board")
+        up = st.file_uploader("Saved page (.html)", type=["html", "htm"], key="import_page")
+        if up is not None and st.button("Import postings from this page"):
+            from tracker.sources.email_alerts import jobs_from_saved_page
+            html = up.getvalue().decode("utf-8", "replace")
+            found = jobs_from_saved_page(html, board.strip() or "Board", today=TODAY)
+            jobs = A.load_manual_jobs()
+            known = {(j.get("title", "").lower(), j.get("institution", "").lower()) for j in jobs.values()}
+            added = 0
+            for raw in found:
+                if (raw.title.lower(), raw.institution.lower()) in known:
+                    continue
+                row = enrich(raw, TODAY, keep_description=True)
+                jid = A.new_manual_id()
+                row.update(job_id=jid, source=raw.source, source_id=jid.split(":", 1)[1], status="Open",
+                           first_seen=TODAY.isoformat(), last_seen=TODAY.isoformat())
+                jobs[jid] = row
+                added += 1
+            A.save_manual_jobs(jobs)
+            st.success(f"Found {len(found)} postings; added {added} new.") if found else st.warning(
+                "No faculty postings found on that page. Is it the job list (not the login page)?")
     pre = ss.get("add_prefill") or {}
 
     with st.form("add-job", clear_on_submit=True):
@@ -477,6 +517,14 @@ def page_add() -> None:
         st.caption("To edit or delete one, open it on the Job details page.")
 
 
+def _report_sources(folder: Path) -> list[dict]:
+    try:
+        import json
+        return json.loads((folder / "scrape_report.json").read_text(encoding="utf-8")).get("sources", [])
+    except (OSError, ValueError):
+        return []
+
+
 def page_data() -> None:
     st.title("⚙️ Data & sources")
     where = "the weekly GitHub run (data/)" if DATA_DIR != LOCAL_DATA else "my_data/latest (download or local scrape)"
@@ -510,6 +558,41 @@ def page_data() -> None:
                 st.error("The scraper reported a problem.")
             with st.expander("Scraper output"):
                 st.code((proc.stdout or "")[-6000:] + (proc.stderr or "")[-4000:])
+
+    st.subheader("📧 E-mail alerts (FMA, AMA, AOM, INFORMS, AIS, jobs.ac.uk, SSRN, listservs)")
+    st.markdown(
+        "Boards that need a member login or block automated access can still reach the tracker through their "
+        "**job-alert e-mails**. Set up the alerts on each site, add a mail filter that puts them (and listserv "
+        f"posts) in one label, e.g. **{SETTINGS['email']['folder']}**, then enter a mailbox *app password* below. "
+        "The tracker only reads that one folder. Full steps are in the README under *Email alerts*.")
+    m1, m2 = st.columns([3, 2])
+    with m1.form("email-setup"):
+        st.caption(f"Mail server: {SETTINGS['email']['imap_host']} · folder: {SETTINGS['email']['folder']} "
+                   "(change both in config/settings.yaml)")
+        user = st.text_input("E-mail address", placeholder="you@gmail.com")
+        pw = st.text_input("App password", type="password",
+                           help="Gmail: Google Account → Security → 2-Step Verification → App passwords. "
+                                "Not your normal password; you can revoke it any time.")
+        if st.form_submit_button("Save on this computer"):
+            if user and pw:
+                save_email_credentials(user, pw)
+                st.success(f"Saved to {EMAIL_ENV} (stays on this computer).")
+            else:
+                st.error("Enter both the address and the app password.")
+    with m2:
+        configured = EMAIL_ENV.exists() or bool(os.environ.get("TRACKER_IMAP_USER"))  # after a save above
+        st.write("Status: " + ("✅ mailbox configured" if configured else "not set up yet"))
+        if st.button("📬 Check my e-mail alerts now", disabled=not configured):
+            with st.spinner("Reading the alert folder…"):
+                proc = run_local_scrape(["Email"])
+            note = next((s for s in _report_sources(LOCAL_DATA) if s["name"] == "Email"), {})
+            if proc.returncode == 0 and note.get("ok", True):
+                st.success(f"Done: {note.get('new', 0)} new postings from e-mail.")
+                st.cache_data.clear()
+            else:
+                st.error(note.get("error") or "Could not read the mailbox.")
+            with st.expander("Details"):
+                st.code((proc.stdout or "")[-3000:] + (proc.stderr or "")[-2000:])
 
     st.subheader("Job boards")
     srcs = {s["name"]: s for s in load_sources()}

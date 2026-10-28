@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import re
 import time
 import urllib.robotparser
 from urllib.parse import urlparse
@@ -15,6 +16,18 @@ USER_AGENT = (
     "+https://github.com/ZoeHu92/Job_Market_Application_Tracker)"
 )
 ROBOTS_AGENT = "AcademicJobTracker"
+
+
+_BOT_PAGE = re.compile(
+    r"pardon our interruption|just a moment\.\.\.|attention required|verify (that )?you are (a )?human|"
+    r"are you a robot|made us think you were a bot|enable javascript and cookies to continue|captcha|"
+    r"access denied\.?</h1>|request unsuccessful\. incapsula", re.I)
+
+
+def looks_like_bot_challenge(body: bytes) -> bool:
+    """Bot-protection interstitials (often served with HTTP 200) instead of the real page."""
+    head = body[:20000].decode("utf-8", "replace")
+    return len(body) < 60000 and bool(_BOT_PAGE.search(head))
 
 
 class FetchError(Exception):
@@ -66,11 +79,22 @@ class Fetcher:
         rp = self._robots[host]
         return True if rp is None else rp.can_fetch(ROBOTS_AGENT, url)
 
+    def _delay_for(self, host: str) -> float:
+        rp = self._robots.get(host)
+        crawl = None
+        if rp is not None:
+            try:
+                crawl = rp.crawl_delay(ROBOTS_AGENT)
+            except Exception:  # noqa: BLE001
+                crawl = None
+        return max(self.delay, float(crawl or 0))
+
     def _wait(self, url: str) -> None:
         host = self._host(url)
+        delay = self._delay_for(host)
         elapsed = time.monotonic() - self._last.get(host, 0)
-        if elapsed < self.delay:
-            time.sleep(self.delay - elapsed)
+        if elapsed < delay:
+            time.sleep(delay - elapsed)
         self._last[host] = time.monotonic()
 
     def get(self, url: str, **kwargs) -> requests.Response:
@@ -92,10 +116,10 @@ class Fetcher:
                 continue
             if r.status_code in (404, 410):
                 return r
+            if looks_like_bot_challenge(r.content):
+                # Respect it: report the block instead of retrying or disguising the request.
+                raise FetchError(url, "blocked by bot protection", r.status_code)
             if r.status_code >= 400:
-                hint = ""
-                if r.status_code in (401, 403) and ("cloudflare" in r.text.lower() or "captcha" in r.text.lower()):
-                    hint = " (blocked by bot protection)"
-                raise FetchError(url, f"HTTP {r.status_code}{hint}", r.status_code)
+                raise FetchError(url, f"HTTP {r.status_code}", r.status_code)
             return r
         raise FetchError(url, f"network error: {last_exc!r}"[:300])

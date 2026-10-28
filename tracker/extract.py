@@ -239,13 +239,54 @@ def labeled_fields(soup: BeautifulSoup) -> dict[str, str]:
 
 _MAIN_HINT = re.compile(r"job[-_ ]?(description|details?|body|content|ad|posting)|description|jobdesc|"
                         r"vacancy|listing[-_ ]?(body|text|content)|posting|article|main-content|content-main", re.I)
+_PARA_TAGS = ["p", "li", "td", "pre", "dd", "blockquote", "h2", "h3", "h4"]
+
+
+def _own_text_len(el) -> int:
+    return sum(len(str(t).strip()) for t in el.find_all(string=True, recursive=False))
+
+
+def _link_density(el) -> float:
+    total = len(el.get_text(" ", strip=True)) or 1
+    links = sum(len(a.get_text(" ", strip=True)) for a in el.find_all("a"))
+    return links / total
 
 
 def main_text(soup: BeautifulSoup) -> str:
-    """Best-effort main posting text with navigation and boilerplate removed."""
+    """Best-effort main posting text with navigation and boilerplate removed.
+
+    Readability-style: every paragraph-like element with real text scores its
+    parent (and half for the grandparent); the best-scoring block, discounted by
+    how much of it is link text (menus), is taken as the posting.
+    """
     soup = soupify(str(soup))  # work on a copy
-    for tag in soup(["script", "style", "noscript", "nav", "header", "footer", "form", "iframe", "svg", "aside"]):
+    for tag in soup(["script", "style", "noscript", "nav", "header", "footer", "iframe", "svg", "aside",
+                     "select", "button"]):
         tag.decompose()
+    for form in soup.find_all("form"):
+        if len(form.get_text(" ", strip=True)) < 300:  # search boxes; ASP.NET pages wrap everything in a form
+            form.decompose()
+    scores: dict[int, float] = {}
+    nodes: dict[int, object] = {}
+    paras = soup.find_all(_PARA_TAGS) + [d for d in soup.find_all(["div", "span"]) if _own_text_len(d) >= 40]
+    for para in paras:
+        txt = para.get_text(" ", strip=True)
+        if len(txt) < 25:
+            continue
+        score = 1 + txt.count(",") + txt.count("，") + txt.count("。") + min(len(txt) // 100, 3)
+        for parent, weight in ((para.parent, 1.0), (para.parent.parent if para.parent else None, 0.5)):
+            if parent is None or parent.name in ("html", "body", "[document]"):
+                continue
+            scores[id(parent)] = scores.get(id(parent), 0) + score * weight
+            nodes[id(parent)] = parent
+    best, best_score = None, 0.0
+    for key, sc in scores.items():
+        el = nodes[key]
+        final = sc * (1 - _link_density(el))
+        if final > best_score:
+            best, best_score = el, final
+    if best is not None and len(best.get_text(strip=True)) >= 150:
+        return clean_text(best.get_text("\n"))
     candidates = []
     for el in soup.find_all(["div", "section", "article", "main", "td"]):
         ident = " ".join([el.get("id") or "", " ".join(el.get("class") or [])])
@@ -254,10 +295,8 @@ def main_text(soup: BeautifulSoup) -> str:
             if len(txt) > 300:
                 candidates.append(txt)
     if candidates:
-        # the shortest block that is still substantial tends to be the posting itself
         candidates.sort(key=len)
-        best = next((c for c in candidates if len(c) > 800), candidates[-1])
-        return clean_text(best)
+        return clean_text(next((c for c in candidates if len(c) > 800), candidates[-1]))
     main = soup.find("main") or soup.find("article") or soup.body or soup
     return clean_text(main.get_text("\n"))
 

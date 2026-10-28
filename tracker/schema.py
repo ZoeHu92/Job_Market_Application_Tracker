@@ -40,6 +40,8 @@ JOB_COLUMNS = [
     "last_seen",
     "closed_date",
     "duplicate_of",      # job_id of the same position on another board, if detected
+    "content_hash",      # fingerprint of the posting text, to notice edits
+    "updated_date",      # last date the posting text changed (watched pages)
     "description",       # full text; only kept when settings.keep_full_description is true
 ]
 

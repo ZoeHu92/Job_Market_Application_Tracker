@@ -1,56 +1,31 @@
 """EconJobMarket public ad feed (JSON).
 
-Documented endpoint: https://backend.econjobmarket.org/data/zz_public/json/Ads
-returns all open ads as a JSON array. Field names are read defensively because
-the schema is only partially documented; the first record's keys are written to
-the scrape report so the mapping can be tightened if EJM changes it.
+Endpoint: https://backend.econjobmarket.org/data/zz_public/json/Ads returns
+every open ad as a list of objects with keys adtitle, adtext (HTML), name
+(institution), department, startdate (posted), enddate, deadline_date,
+locations [{city, state, country_code}], position_types [{name}],
+categories [{name}] and url (…/positions/<id>).
 """
 from __future__ import annotations
 
 import json
+import re
 import time
 
+from ..classify import business_relevance, is_faculty_position
 from ..extract import html_to_text
 from ..http import Fetcher, FetchError
 from .base import RawJob, SourceResult
-from .board import looks_business
 
 DEFAULT_URL = "https://backend.econjobmarket.org/data/zz_public/json/Ads"
 
 
-def _get(d: dict, *keys: str, default=""):
-    """First non-empty value among keys (case-insensitive, also one level of nesting)."""
-    if not isinstance(d, dict):
-        return default
-    lower = {k.lower(): v for k, v in d.items()}
-    for key in keys:
-        v = lower.get(key.lower())
-        if v not in (None, "", [], {}):
-            return v
-    for v in d.values():
-        if isinstance(v, dict):
-            inner = _get(v, *keys, default=None)
-            if inner not in (None, "", [], {}):
-                return inner
-    return default
-
-
 def _names(v) -> str:
     if isinstance(v, list):
-        return "; ".join(_names(x) for x in v if x)
+        return "; ".join(x for x in (_names(i) for i in v) if x)
     if isinstance(v, dict):
-        return str(_get(v, "name", "category", "title", "label", "type", default=""))
+        return str(v.get("name") or "")
     return str(v or "")
-
-
-def _ads(payload) -> list[dict]:
-    if isinstance(payload, list):
-        return [a for a in payload if isinstance(a, dict)]
-    if isinstance(payload, dict):
-        for key in ("ads", "Ads", "data", "results", "positions", "items"):
-            if isinstance(payload.get(key), list):
-                return [a for a in payload[key] if isinstance(a, dict)]
-    return []
 
 
 class EconJobMarketSource:
@@ -67,52 +42,57 @@ class EconJobMarketSource:
             r = self.fetcher.get(self.url, headers={"Accept": "application/json"})
             if r.status_code >= 400:
                 raise FetchError(self.url, f"HTTP {r.status_code}", r.status_code)
-            ads = _ads(json.loads(r.content))
+            ads = json.loads(r.content)
         except (FetchError, ValueError) as exc:
             result.ok = False
             result.error = getattr(exc, "reason", None) or f"bad JSON: {exc}"[:200]
             return result
+        if isinstance(ads, dict):
+            ads = ads.get("ads") or ads.get("data") or []
+        ads = [a for a in ads if isinstance(a, dict)]
         result.pages = 1
         if not ads:
             result.ok = False
             result.error = "feed returned no ads"
             return result
-        result.notes.append("first ad keys: " + ", ".join(sorted(ads[0].keys()))[:400])
         for ad in ads:
-            ad_id = str(_get(ad, "id", "adid", "ad_id", "posid", "position_id", "positionid"))
+            url = str(ad.get("url") or "")
+            m = re.search(r"/positions/(\d+)", url)
+            ad_id = m.group(1) if m else str(ad.get("id") or "")
             if not ad_id:
                 continue
-            title = str(_get(ad, "title", "position_title", "ad_title", "positiontitle", "name"))
-            inst = _get(ad, "institution", "inst_name", "institution_name", "organization", "employer",
-                        "recruiter", "recruiter_name", "orgname")
-            inst = _names(inst) if isinstance(inst, (dict, list)) else str(inst)
-            dept = str(_get(ad, "department", "dept", "division", "unit", "department_name"))
-            cats = "; ".join(x for x in (_names(_get(ad, "categories", "fields", "category", default=[])),
-                                         _names(_get(ad, "position_types", "positiontypes", "type", default=[]))) if x)
-            desc = html_to_text(str(_get(ad, "description", "ad_text", "adtext", "text", "details", "body")))
-            url = str(_get(ad, "url", "link", "position_url", "ad_url", "ejm_url")) or \
-                f"https://econjobmarket.org/positions/{ad_id}"
+            loc = (ad.get("locations") or [{}])[0] or {}
+            title = str(ad.get("adtitle") or "").strip()
+            text = html_to_text(str(ad.get("adtext") or ""))
             job = RawJob(
-                source=self.name, source_id=ad_id, url=url, title=title, institution=inst, department=dept,
-                location=", ".join(str(x) for x in (_get(ad, "city", "location"), _get(ad, "state", "region"))
-                                   if x and not isinstance(x, (dict, list))),
-                country=_names(_get(ad, "country", "country_name", "countrycode")),
-                categories=cats, description=desc,
-                posted_date=str(_get(ad, "created", "posted", "posted_date", "date_posted", "startdate"))[:10],
-                deadline_raw=str(_get(ad, "deadline", "enddate", "end_date", "closing_date",
-                                      "application_deadline"))[:10],
-                start_date_raw=str(_get(ad, "position_start", "job_start", "start_of_job")),
+                source=self.name, source_id=ad_id, url=url or f"https://econjobmarket.org/positions/{ad_id}",
+                title=title, institution=str(ad.get("name") or "").strip(),
+                department=str(ad.get("department") or "").strip(),
+                location=", ".join(str(x) for x in (loc.get("city"), loc.get("state")) if x),
+                country=str(loc.get("country_code") or ""),
+                categories="; ".join(x for x in (_names(ad.get("position_types")), _names(ad.get("categories"))) if x),
+                description=text,
+                posted_date=str(ad.get("startdate") or "")[:10],
+                listing_expires=str(ad.get("enddate") or "")[:10],
+                deadline_raw=str(ad.get("deadline_date") or "")[:10],
                 default_field=self.cfg.get("default_field", ""),
             )
             if job.job_id in known_ids:
                 job.stub = True
                 result.jobs.append(job)
                 continue
-            if not looks_business(title, " ".join([inst, dept, cats, desc[:1500]])):
+            # EJM category lists describe research fields ("International Finance/Macro"), not the
+            # hiring unit, so only the title, employer, department and ad text decide relevance.
+            if not is_faculty_position(title, _names(ad.get("position_types"))) or \
+                    not business_relevance(title, job.institution, job.department, "", text):
                 result.skipped_filtered += 1
                 continue
+            # Many EJM ads put the real position title in the first heading of the ad text.
+            heading = re.match(r"\s*([^\n]{8,140})\n", text)
+            if heading and re.search(r"professor|lecturer|faculty|postdoc|fellow", heading.group(1), re.I) \
+                    and not re.search(r"professor|lecturer|postdoc|fellow", title, re.I):
+                job.title = f"{heading.group(1).strip()} ({title})"
             result.jobs.append(job)
-        # The feed is the complete set of open ads.
-        result.complete = True
+        result.complete = True  # the feed is the complete set of open ads
         result.seconds = round(time.monotonic() - t0, 1)
         return result

@@ -23,7 +23,7 @@ concurrency:
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v4
 
@@ -39,7 +39,14 @@ jobs:
       - name: Scrape job boards
         env:
           SOURCES: ${{ inputs.sources }}
-        run: python -m tracker.scrape --sources "$SOURCES"
+          # Optional: lets the run read your job-alert e-mail folder (see README "Email alerts").
+          TRACKER_IMAP_USER: ${{ secrets.TRACKER_IMAP_USER }}
+          TRACKER_IMAP_PASSWORD: ${{ secrets.TRACKER_IMAP_PASSWORD }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Postings from member-only alerts are only collected here if the repository is private.
+          export TRACKER_PUBLIC_REPO=$(gh api "repos/${{ github.repository }}" --jq '.private | not')
+          python -m tracker.scrape --sources "$SOURCES"
 
       - name: Commit new data
         run: |

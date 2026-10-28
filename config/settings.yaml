@@ -6,8 +6,9 @@ keep_full_description: false
 
 # Politeness: seconds between requests to the same site, and caps per weekly run.
 request_delay_seconds: 1.5
-max_new_details_per_source: 300
+max_new_details_per_source: 600
 closure_checks_per_source: 60
+parallel_sources: 6            # boards scraped at the same time (each still waits between its own requests)
 
 # Open a GitHub issue each week summarising new / closing / closed postings.
 # GitHub emails you about new issues in your own repository.
@@ -17,3 +18,12 @@ digest_fields: []
 
 # Where the local app downloads the latest weekly data from (owner/repo).
 github_repo: ZoeHu92/Job_Market_Application_Tracker
+
+# E-mail alerts (FMA, AMA, AOM, INFORMS, AIS, jobs.ac.uk, SSRN, listservs). See README "Email alerts".
+# Credentials are never stored here: use GitHub secrets TRACKER_IMAP_USER / TRACKER_IMAP_PASSWORD,
+# or the e-mail form on the app's Data & sources page (saved to my_data/email.env on your computer).
+email:
+  imap_host: imap.gmail.com
+  folder: JobAlerts        # Gmail label (or mailbox folder) your filters put the alerts in
+  lookback_days: 30
+  max_messages: 300

@@ -102,3 +102,20 @@ def test_long_expired_job_is_not_reopened_by_relisting():
     assert rows["AFA:7"]["status"] == "Closed"
     st = run(rows, [RawJob(source="AFA", source_id="7", url="u", stub=True)], D2)
     assert st["reopened"] == 0 and rows["AFA:7"]["status"] == "Closed"
+
+
+def test_watched_page_change_sets_updated_date():
+    rows = {}
+    page = RawJob(source="AFA", source_id="p", url="u", title="Faculty positions", institution="X",
+                  description="Version one of the recruitment page.")
+    run(rows, [page], D1)
+    assert rows["AFA:p"]["updated_date"] == ""
+    page2 = RawJob(source="AFA", source_id="p", url="u", title="Faculty positions", institution="X",
+                   description="Version two: new openings in finance.")
+    run(rows, [page2], D2)
+    assert rows["AFA:p"]["updated_date"] == D2.isoformat()
+
+
+def test_stale_rows_close_after_four_months():
+    rows = {"a": {"job_id": "a", "status": "Open", "deadline": "", "listing_expires": "", "last_seen": "2026-05-01"}}
+    assert expire_rows(rows, D2) == 1 and rows["a"]["status"] == "Closed"

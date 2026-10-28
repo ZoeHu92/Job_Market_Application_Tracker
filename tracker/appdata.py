@@ -45,6 +45,26 @@ def read_jobs_frame(folder: Path) -> pd.DataFrame:
     return df[JOB_COLUMNS]
 
 
+def load_jobs_union() -> tuple[pd.DataFrame, dict, Path]:
+    """All postings from the weekly data (data/) and from this computer (my_data/latest/).
+
+    A posting present in both is taken from the more recent run, so closures from the
+    newest run win, while e-mail jobs checked only on this computer stay visible after the
+    next weekly download.
+    """
+    newest, report = newest_data_dir()
+    frames = []
+    for folder in ([REPO_DATA, LOCAL_DATA] if newest == LOCAL_DATA else [LOCAL_DATA, REPO_DATA]):
+        df = read_jobs_frame(folder)
+        if len(df):
+            frames.append(df)
+    if not frames:
+        return pd.DataFrame(columns=JOB_COLUMNS), report, newest
+    # later frames (the newest run) win
+    merged = pd.concat(frames, ignore_index=True).drop_duplicates("job_id", keep="last")
+    return merged.reset_index(drop=True), report, newest
+
+
 def download_latest(repo: str, timeout: float = 30) -> str:
     """Fetch data/jobs.csv and the report from the repo's default branch into my_data/latest/."""
     api = requests.get(f"https://api.github.com/repos/{repo}", timeout=timeout)
@@ -61,6 +81,19 @@ def download_latest(repo: str, timeout: float = 30) -> str:
         (LOCAL_DATA / name).write_bytes(r.content)
     rep = _report(LOCAL_DATA)
     return f"Downloaded data from {repo}@{branch} (run finished {rep.get('finished_at', 'unknown')})."
+
+
+EMAIL_ENV = MY_DATA / "email.env"
+
+
+def save_email_credentials(user: str, password: str) -> None:
+    MY_DATA.mkdir(parents=True, exist_ok=True)
+    EMAIL_ENV.write_text(f"TRACKER_IMAP_USER={user.strip()}\nTRACKER_IMAP_PASSWORD={password.strip()}\n",
+                         encoding="utf-8")
+    try:
+        EMAIL_ENV.chmod(0o600)
+    except OSError:
+        pass
 
 
 def local_scrape_command(sources: list[str] | None = None) -> list[str]:

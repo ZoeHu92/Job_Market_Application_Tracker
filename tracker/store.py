@@ -7,7 +7,8 @@ Lifecycle of a posting:
     if the page is gone or says expired/filled (or cannot be checked) the job is
     Closed with closed_date = run date. A source that errored or was only
     partly read never closes anything, so an outage cannot wipe the board.
-  * deadline more than 90 days ago, or listing expiry passed → Closed.
+  * deadline more than 90 days ago, listing expiry passed, or not seen anywhere
+    for 120 days (e-mail alerts are only seen once) → Closed.
 """
 from __future__ import annotations
 
@@ -22,6 +23,8 @@ from .schema import JOB_COLUMNS
 from .sources.base import SourceResult
 
 csv.field_size_limit(10_000_000)
+
+STALE_DAYS = 120
 
 
 def read_jobs(path: str | Path) -> dict[str, dict]:
@@ -72,7 +75,7 @@ def _close(row: dict, today: date, note: str) -> None:
 
 
 # Fields refreshed when a known job's details are re-fetched.
-_KEEP_ON_UPDATE = {"job_id", "first_seen", "status", "closed_date", "duplicate_of"}
+_KEEP_ON_UPDATE = {"job_id", "first_seen", "status", "closed_date", "duplicate_of", "updated_date"}
 
 
 def merge_results(rows: dict[str, dict], results: list[SourceResult], enriched: dict[str, dict], today: date,
@@ -101,6 +104,9 @@ def merge_results(rows: dict[str, dict], results: list[SourceResult], enriched: 
                 st["new"] += 1
                 continue
             if jid in enriched:
+                old_hash, new_hash = row.get("content_hash", ""), enriched[jid].get("content_hash", "")
+                if old_hash and new_hash and old_hash != new_hash:
+                    row["updated_date"] = t
                 for k, v in enriched[jid].items():
                     if k not in _KEEP_ON_UPDATE and v not in ("", None):
                         row[k] = v
@@ -146,6 +152,9 @@ def expire_rows(rows: dict[str, dict], today: date) -> int:
             n += 1
         elif exp and exp < today - timedelta(days=3) and r.get("last_seen") != today.isoformat():
             _close(r, today, f"Listing expired {exp.isoformat()}")
+            n += 1
+        elif r.get("last_seen") and r["last_seen"] < (today - timedelta(days=STALE_DAYS)).isoformat():
+            _close(r, today, f"Not seen on its board or in e-mail for {STALE_DAYS // 30} months")
             n += 1
     return n
 

@@ -14,7 +14,7 @@ DATA_ROOT = Path(os.environ.get("TRACKER_DATA_ROOT") or ROOT)
 DEFAULT_SETTINGS = {
     "keep_full_description": False,
     "request_delay_seconds": 1.5,
-    "max_new_details_per_source": 300,
+    "max_new_details_per_source": 600,
     "closure_checks_per_source": 60,
     "weekly_digest_issue": True,
     "digest_fields": [],

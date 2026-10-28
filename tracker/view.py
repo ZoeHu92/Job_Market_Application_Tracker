@@ -53,6 +53,8 @@ def build_frame(jobs: pd.DataFrame, manual: dict[str, dict], apps: dict[str, dic
     is_new = (df["first_seen_dt"] >= t - pd.Timedelta(days=7)) & (df["status"] == "Open")
     passed = (df["status"] == "Open") & (df["deadline_dt"] < t)
     df["status_disp"] = "🟢 Open"
+    updated = (_to_dt(df["updated_date"]) >= t - pd.Timedelta(days=7)) & (df["status"] == "Open")
+    df.loc[updated, "status_disp"] = "🔄 Updated"
     df.loc[is_new, "status_disp"] = "🆕 New"
     df.loc[passed, "status_disp"] = "🟠 Deadline passed"
     df.loc[df["status"] == "Closed", "status_disp"] = "⚫ Closed"

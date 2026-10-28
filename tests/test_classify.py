@@ -175,3 +175,38 @@ def test_looks_closed():
 def test_normalize_institution():
     assert C.normalize_institution("The University of Texas at Austin - McCombs School of Business") == \
         C.normalize_institution("University of Texas at Austin")
+
+
+# ---- Chinese-language postings ------------------------------------------------------------
+ZH = ("上海交通大学安泰经济与管理学院金融系2027年度招聘。招聘助理教授、副教授、教授（长聘教轨）。"
+      "申请人须已获得或在2027年8月前获得金融学或经济学博士学位。申请截止日期：2026年12月31日。年薪 40-80万。"
+      "请提交简历、求职信、Job Market Paper及三封推荐信。")
+
+
+def test_chinese_posting():
+    assert C.detect_fields("金融系2027年度招聘", "", "", ZH)[0] == "Finance"
+    assert C.detect_rank("金融系2027年度招聘", ZH) == ("Open rank", "Yes")
+    assert C.detect_degree(ZH) == "PhD (ABD OK)"
+    assert C.extract_deadline(ZH, REF)["deadline"] == "2026-12-31"
+    s = C.extract_salary(ZH)
+    assert (s["salary_min"], s["salary_max"], s["salary_currency"]) == (400000, 800000, "CNY")
+    assert C.detect_materials(ZH) == ["Cover letter", "CV", "Job market paper", "Reference letters"]
+    assert C.detect_country("", "", ZH) == "China"
+    assert C.business_relevance("金融系2027年度招聘", "上海交通大学", "")
+    assert C.is_faculty_position("经济学院专任教师招聘公告")
+
+
+def test_chinese_deadline_forms():
+    assert C.extract_deadline("报名截止时间为2026年11月30日17:00", REF)["deadline"] == "2026-11-30"
+    assert C.extract_deadline("请于12月15日前提交材料", REF)["deadline"] == "2026-12-15"
+    assert C.extract_deadline("招满为止", REF)["open_until_filled"]
+
+
+def test_business_relevance_rules():
+    assert C.business_relevance("Assistant Professor (Applied Microeconomics)", "Arizona State University",
+                                "W. P. Carey School of Business - Economics")
+    assert not C.business_relevance("Assistant Professor", "Example University", "Department of Economics")
+    assert not C.business_relevance("Assistant/Associate Professor", "Simon Fraser University", "Economics")
+    assert not C.business_relevance("Faculty", "X", "All departments",
+                                    "Econometrics; Finance; Macro; Labor; Marketing; Any field; IO")
+    assert C.business_relevance("Faculty", "X", "", "Finance")

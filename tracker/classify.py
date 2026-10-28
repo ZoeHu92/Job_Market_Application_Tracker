@@ -76,6 +76,10 @@ FIELD_PATTERNS: dict[str, list[str]] = {
     "Business Law & Ethics": [r"\bbusiness law\b", r"\blegal studies\b", r"\bbusiness ethics\b", r"\blaw and ethics\b"],
     "Hospitality & Tourism": [r"\bhospitality\b", r"\btourism\b", r"\bhotel\b"],
 }
+# Chinese-language postings (CJK characters are \\w, so these patterns have no \\b).
+FIELD_PATTERNS_ZH: dict[str, list[str]] = {'Finance': ['金融', '投资学', '资产定价', '公司财务'], 'Accounting': ['会计', '审计', '财务管理', '税务'], 'Marketing': ['营销'], 'Management & Strategy': ['战略', '企业管理', '工商管理'], 'Organizational Behavior & HR': ['组织行为', '组织管理', '人力资源', '领导力'], 'Operations & Supply Chain': ['运营管理', '运作管理', '供应链', '物流', '管理科学', '运筹'], 'Information Systems': ['信息系统', '信息管理', '信息、技术与创新', '信息技术与创新'], 'Business Analytics & Statistics': ['商业分析', '商务智能', '大数据', '统计学'], 'Economics': ['经济学', '经济系'], 'Real Estate': ['房地产'], 'Insurance & Risk': ['保险', '精算', '风险管理'], 'Entrepreneurship & Innovation': ['创业'], 'International Business': ['国际商务'], 'Hospitality & Tourism': ['旅游', '酒店管理']}
+for _f, _pats in FIELD_PATTERNS_ZH.items():
+    FIELD_PATTERNS[_f] = FIELD_PATTERNS[_f] + _pats
 _FIELD_RES = {f: [re.compile(p, re.I) for p in pats] for f, pats in FIELD_PATTERNS.items()}
 
 BUSINESS_FIELDS = [f for f in FIELD_PATTERNS if f != "Economics"]
@@ -146,30 +150,68 @@ def detect_fields(title: str = "", department: str = "", categories: str = "",
 
 _BSCHOOL_RE = re.compile(
     r"business school|school of business|college of business|business administration|"
-    r"graduate school of (business|management)|school of management|management school|faculty of business|"
-    r"business and economics|economics and business|school of accountancy|school of accounting|"
-    r"\b(wharton|booth|kellogg|sloan|haas|stern|fuqua|tuck|ross|darden|anderson|marshall|mccombs|kelley|"
-    r"olin|tepper|goizueta|mendoza|carlson|questrom|kenan-flagler|scheller|krannert|eller|warrington|"
-    r"bauer|haslam|isenberg|lerner|insead|hec|rotman|sauder|ivey|desautels|schulich|esade|iese|bocconi|"
-    r"ceibs|ckgsb|guanghua|saif|antai|cheung kong|lee kong chian|said business|judge business|"
-    r"london business school|rotterdam school|smeal|foster|fisher|jones|owen|simon|terry|cox|rawls|"
-    r"freeman|price college|leavey|gies|zicklin|carey|broad college|culverhouse|walton|wisconsin school of business)\b",
+    r"graduate school of (business|management)|(school|college|faculty|institute) of (economics and )?management|"
+    r"economics and management|management and economics|faculty of (business|commerce)|school of commerce|"
+    r"business and economics|economics and business|school of (accountancy|accounting|finance)|"
+    r"\b(wharton|insead|hec (paris|montr[ée]al|lausanne)|ceibs|ckgsb|kenan-flagler)\b",
     re.I,
 )
 
 
+_BSCHOOL_ZH = re.compile(r"商学院|管理学院|经济管理学院|经济与管理学院|经管学院|金融学院|会计学院|工商管理学院|"
+                         r"高级金融学院|经济与工商管理学院|财经大学|金融科技学院")
+
+
 def is_business_school(*texts: str) -> bool:
-    return any(t and _BSCHOOL_RE.search(_rewrite(t)) for t in texts)
+    return any(t and (_BSCHOOL_RE.search(_rewrite(t)) or _BSCHOOL_ZH.search(t)) for t in texts)
+
+
+# Subject words that, in a title / employer / department, mark a business-school position.
+# Deliberately narrower than FIELD_PATTERNS: "management", "statistics", "innovation"
+# or "leadership" on their own also describe public-policy, science and admin jobs.
+_BIZ_SUBJECT = re.compile(
+    r"\b(finance|financial (economics|markets?|engineering|technology|management)|fintech|banking|accounting|"
+    r"accountancy|auditing|taxation|marketing|strateg(y|ic management)|organi[sz]ational behaviou?r|"
+    r"organi[sz]ation(al)? (theory|studies)|human resource|operations management|supply chain|management science|"
+    r"decision sciences?|information systems|business analytics|entrepreneur\w*|international business|real estate|"
+    r"insurance|risk management|business (law|ethics|economics|administration|studies)|managerial economics|"
+    r"(professor|lecturer|faculty|department|area|group) (of|in) management|management (department|area|group|unit))\b",
+    re.I,
+)
+
+
+_BIZ_SUBJECT_ZH = re.compile(r"金融|会计|审计|财务|营销|战略管理|企业管理|工商管理|组织行为|组织管理|人力资源|运营管理|"
+                             r"供应链|管理科学|信息系统|商业分析|商务智能|创业|国际商务|房地产|保险|精算")
+
+
+def business_relevance(title: str = "", institution: str = "", department: str = "", categories: str = "",
+                       text: str = "") -> bool:
+    """Is this a business-school position?
+
+    True when a business subject is named in the title, employer or department;
+    when a short category list (not EJM-style "any field" lists) names one; or
+    when the employer / department / opening text names a business school.
+    """
+    head = " ".join([title or "", institution or "", department or ""])
+    if _BIZ_SUBJECT.search(head) or _BIZ_SUBJECT_ZH.search(head):
+        return True
+    cats = [c for c in re.split(r"[;,\n|]", categories or "") if c.strip()]
+    if 0 < len(cats) <= 5 and _BIZ_SUBJECT.search(categories):
+        return True
+    return is_business_school(institution, department, (text or "")[:500])
 
 
 _FACULTY_RE = re.compile(
     r"professor|lecturer|faculty|instructor|post-?doc|postdoctoral|research fellow|reader\b|"
-    r"tenure|chair\b|chair in|teaching fellow|assistant prof|associate prof|\bdean\b|academic position",
+    r"tenure|chair\b|chair in|teaching fellow|assistant prof|associate prof|\bdean\b|academic position|"
+    r"教授|讲师|教师|博士后|研究员|师资|教职|教研|教学科研|诚聘|英才|人才招聘",
     re.I,
 )
 _NON_FACULTY_RE = re.compile(
     r"\b(analyst|accountant|bookkeeper|clerk|controller|coordinator|specialist|technician|officer|"
-    r"advisor|adviser|counsel(or)?|assistant to|administrative|payroll|bursar|recruiter|manager)\b",
+    r"advisor|adviser|counsel(or)?|assistant to|administrative|payroll|bursar|recruiter|manager|director|"
+    r"engineer|programmer|scientist|economists?|research (associate|assistant)|associate in research|intern(ship)?|"
+    r"phd (hire|researcher))\b",
     re.I,
 )
 
@@ -199,7 +241,7 @@ def detect_rank(title: str, description: str = "", region: str = "") -> tuple[st
     asst = bool(re.search(r"assistant[\s/,-]*(professor|prof\.?)\b|\basst\.? prof", t))
     assoc = bool(re.search(r"associate[\s/,-]*(professor|prof\.?)\b|\bassoc\.? prof", t))
     # "Assistant/Associate Professor", "Assistant or Associate Professor"
-    if re.search(r"assistant\s*(/|,|or|and|&)\s*associate", t):
+    if re.search(r"assistant\s*(/|,|or|and|&)\s*(\w+\s+)?associate", t):
         asst = assoc = True
     if re.search(r"associate\s*(/|,|or|and|&)\s*(full\s*)?professor", t):
         assoc = True
@@ -215,7 +257,8 @@ def detect_rank(title: str, description: str = "", region: str = "") -> tuple[st
     elif re.search(r"\bvisiting\b", t):
         rank = "Visiting"
     elif re.search(r"clinical|teaching (professor|track|faculty|stream)|professor of (the )?practice|practice professor|"
-                   r"\binstructor\b|\badjunct\b|lecturer in practice|professional track", t):
+                   r"\binstructor\b|\badjunct\b|lecturer in practice|professional track|pro tem|non[- ]tenure|"
+                   r"part[- ]time|practice track", t):
         rank = "Clinical/Teaching"
     elif open_rank or (asst and assoc and full):
         rank = "Open rank"
@@ -230,7 +273,9 @@ def detect_rank(title: str, description: str = "", region: str = "") -> tuple[st
     elif re.search(r"endowed|distinguished|chair\b|chaired", t):
         rank = "Chair/Endowed"
     elif re.search(r"senior lecturer|associate lecturer|\blecturer\b|\breader\b", t):
-        if "senior lecturer" in t or "reader" in t:
+        if re.search(r"(?<!senior )(?<!associate )\blecturer\b", t) and "senior lecturer" in t:
+            rank = "Lecturer"  # "Lecturer/Senior Lecturer": open to entry level
+        elif "senior lecturer" in t or "reader" in t:
             rank = "Associate" if region in _LECTURER_REGIONS else "Clinical/Teaching"
         else:
             rank = "Lecturer" if region in _LECTURER_REGIONS or not region else "Clinical/Teaching"
@@ -247,17 +292,67 @@ def detect_rank(title: str, description: str = "", region: str = "") -> tuple[st
     else:
         rank = "Unspecified"
 
+    if rank == "Unspecified":
+        rank = _rank_zh(title or "", (description or "")[:3000]) or _rank_from_text(d[:2500]) or rank
+
     both = t + " " + d
     if re.search(r"non[- ]tenure|not tenure[- ]track|fixed[- ]term|one[- ]year|term appointment", both) or rank in (
             "Clinical/Teaching", "Visiting", "Postdoc"):
         tenure = "No"
-    elif re.search(r"tenure[- ](track|eligible|stream|line)|tenured|tenure system|\bon tenure\b", both):
+    elif re.search(r"tenure[- ](track|eligible|stream|line)|tenured|tenure system|\bon tenure\b|长聘|预聘|准聘|常任轨|终身教职", both):
         tenure = "Yes"
     elif rank == "Lecturer" and re.search(r"permanent|open[- ]ended|indefinite", both):
         tenure = "Yes"
     else:
         tenure = "Unknown"
     return rank, tenure
+
+
+def _rank_from_text(d: str) -> str:
+    """Rank words in an English description, for titles like '金融系2027年度招聘'."""
+    if re.search(r"all (ranks|levels)|open[- ]rank|any rank", d):
+        return "Open rank"
+    asst = "assistant professor" in d
+    assoc = "associate professor" in d
+    full = bool(re.search(r"(?<!assistant )(?<!associate )\b(full )?professors?\b(?! of practice)", d))
+    if asst and assoc and full:
+        return "Open rank"
+    if asst and assoc:
+        return "Assistant/Associate"
+    if asst:
+        return "Assistant"
+    if assoc:
+        return "Associate/Full" if full else "Associate"
+    return ""
+
+
+def _rank_zh(title: str, desc: str) -> str:
+    """Rank from Chinese wording (助理教授 / 副教授 / 教授 / 讲师 / 博士后)."""
+    for text in (title, desc):
+        if not text:
+            continue
+        if re.search(r"各级|所有职级|不限职级|各职级|职级不限", text):
+            return "Open rank"
+        asst = "助理教授" in text or "讲师" in text
+        assoc = "副教授" in text
+        full = bool(re.search(r"(?<!助理)(?<!副)教授", text))
+        if asst and assoc and full:
+            return "Open rank"
+        if asst and assoc:
+            return "Assistant/Associate"
+        if assoc and full:
+            return "Associate/Full"
+        if "助理教授" in text:
+            return "Assistant"
+        if assoc:
+            return "Associate"
+        if "博士后" in text:
+            return "Postdoc"
+        if "讲师" in text:
+            return "Lecturer"
+        if full:
+            return "Full"
+    return ""
 
 
 def is_entry_level(rank: str) -> bool:
@@ -268,12 +363,12 @@ def is_entry_level(rank: str) -> bool:
 # Degree requirement
 # ---------------------------------------------------------------------------
 
-_PHD_RE = re.compile(r"ph\.?\s?d\b|doctoral degree|doctorate|d\.b\.a\.?|\bdba\b|terminal degree", re.I)
+_PHD_RE = re.compile(r"ph\.?\s?d\b|doctoral degree|doctorate|d\.b\.a\.?|\bdba\b|terminal degree|博士学位|博士研究生|博士", re.I)
 _ABD_RE = re.compile(
     r"\babd\b|all[- ]but[- ]dissertation|near(ing)? completion|expected (to (be )?(complete|completed|conferred|finish)|by|before)|"
     r"anticipated|(completed?|conferred|in hand|awarded) (by|before|prior to) (the )?(start|time|date|beginning)|"
     r"by the (start|time|beginning) of (the )?(appointment|employment)|final stages|candidates? (who are )?close to|"
-    r"near the completion|will (have )?complete|"
+    r"near the completion|will (have )?complete|应届|即将获得|预计.{0,12}获得|博士在读|前获得|毕业前|"
     r"(required|expected|needed|in hand) (by|before|prior to) (the )?(start|beginning|time|date|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|fall|summer|autumn)",
     re.I,
 )
@@ -294,6 +389,13 @@ def detect_degree(text: str) -> str:
             window = t[max(0, m.start() - 250): m.end() + 300]
             if _ABD_RE.search(window):
                 return "PhD (ABD OK)"
+            # "...a doctoral degree in finance by August 10, 2027" (same sentence only)
+            start = max(t.rfind(".", 0, m.start()), t.rfind("\n", 0, m.start()), t.rfind("•", 0, m.start())) + 1
+            ends = [i for i in (t.find(". ", m.end()), t.find("\n", m.end())) if i >= 0]
+            sentence = t[start:min(ends) if ends else len(t)]
+            if re.search(r"\bby (the )?(start|beginning|time|date|commencement|(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|fall|summer|autumn)\w*)",
+                         sentence, re.I):
+                return "PhD (ABD OK)"
         return "PhD required"
     if _MASTERS_RE.search(t):
         return "Master's+"
@@ -313,6 +415,8 @@ _MON = r"(?P<mon>jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july
 _DAY = r"(?P<day>\d{1,2})(?:st|nd|rd|th)?"
 _YEAR = r"(?P<year>(?:19|20)\d{2})"
 _DATE_PATTERNS = [
+    re.compile(r"(?P<year>20\d{2})\s*年\s*(?P<month>\d{1,2})\s*月\s*(?P<day>\d{1,2})\s*[日号]"),
+    re.compile(r"(?<![\d年])(?P<month>\d{1,2})\s*月\s*(?P<day>\d{1,2})\s*[日号]"),
     re.compile(rf"\b{_MON}\s+{_DAY}(?:\s*,\s*|\s+){_YEAR}\b", re.I),
     re.compile(rf"\b{_DAY}\s+(?:of\s+)?{_MON}(?:\s*,\s*|\s+){_YEAR}\b", re.I),
     re.compile(rf"\b(?P<year>(?:19|20)\d{{2}})-(?P<month>\d{{1,2}})-(?P<day>\d{{1,2}})\b"),
@@ -324,7 +428,8 @@ _DATE_PATTERNS = [
 _DEADLINE_CUE = re.compile(
     r"deadline|\bdue\b|closing date|\bcloses?\b|close of applications|apply by|apply no later|"
     r"(received|submitted|complete[d]?|considered|accepted|apply|applications?)\b[^.;\n]{0,40}\b(by|before|no later than|prior to|until)\b|"
-    r"no later than|full consideration|priority consideration|priority deadline|applications? (will be )?accepted until",
+    r"no later than|full consideration|priority consideration|priority deadline|applications? (will be )?accepted until|"
+    r"截止|截至|报名时间|申请时间|申请期限",
     re.I,
 )
 _REVIEW_CUE = re.compile(
@@ -335,7 +440,8 @@ _REVIEW_CUE = re.compile(
 )
 _UNTIL_FILLED = re.compile(
     r"until (the )?(position|positions|search|vacancy|post|role|job)s? (is|are|has been|have been)? ?(filled|closed|completed)|"
-    r"open until filled|until filled|until a suitable candidate|until an appointment is made|until the search (is )?(concluded|complete)",
+    r"open until filled|until filled|until a suitable candidate|until an appointment is made|until the search (is )?(concluded|complete)|"
+    r"招满为止|直至招满|招满即止|长期有效|直至岗位招满",
     re.I,
 )
 
@@ -387,7 +493,7 @@ def find_dates(text: str, ref: date) -> list[tuple[int, int, date]]:
 def _sentence_window(text: str, start: int, end: int) -> tuple[str, str]:
     """Text before (same sentence, max 160 chars) and after (max 40 chars) a span."""
     left = text[max(0, start - 160):start]
-    cut = max(left.rfind(". "), left.rfind("\n"), left.rfind("; "))
+    cut = max(left.rfind(". "), left.rfind("\n"), left.rfind("; "), left.rfind("。"), left.rfind("；"))
     if cut >= 0:
         left = left[cut + 1:]
     right = text[end:end + 40]
@@ -427,7 +533,8 @@ def extract_deadline(text: str, ref: date | None = None) -> dict:
         left, right = _sentence_window(text, s, e)
         if _REVIEW_CUE.search(left):
             reviews.append(d)
-        elif _DEADLINE_CUE.search(left[-110:]) or re.match(r"\s*(is|will be)? ?the (application )?deadline", right, re.I):
+        elif _DEADLINE_CUE.search(left[-110:]) or re.match(r"\s*(is|will be)? ?the (application )?deadline", right, re.I) \
+                or re.match(r"\s*(\d{1,2}[:：]\d{2})?\s*(前|之前|以前|止|截止)", right):
             deadlines.append(d)
     floor = ref - timedelta(days=120)
     deadlines = sorted(x for x in deadlines if x >= floor)
@@ -509,10 +616,20 @@ def _amount(s: str) -> float | None:
         return None
 
 
+_SAL_ZH = re.compile(r"(年薪|薪酬|待遇|薪资)[^。；\n]{0,20}?(?P<a>\d+(?:\.\d+)?)\s*(?:-|—|–|~|～|至|到)\s*(?P<b>\d+(?:\.\d+)?)\s*万"
+                     r"|(?P<a2>\d+(?:\.\d+)?)\s*(?:-|—|–|~|～|至|到)\s*(?P<b2>\d+(?:\.\d+)?)\s*万(元)?\s*/\s*年")
+
+
 def extract_salary(text: str) -> dict:
     """Find a stated salary (range). Returns dict(salary_min, salary_max, salary_currency, salary_text)."""
     empty = {"salary_min": None, "salary_max": None, "salary_currency": "", "salary_text": ""}
     t = re.sub(r"\s+", " ", text or "")
+    m = _SAL_ZH.search(t)
+    if m:
+        a, b = float(m.group("a") or m.group("a2")), float(m.group("b") or m.group("b2"))
+        if 5 <= a <= b <= 1000:
+            return {"salary_min": a * 10000, "salary_max": b * 10000, "salary_currency": "CNY",
+                    "salary_text": f"RMB {a:g}–{b:g}万/yr"}
     best = None
     for m in _SAL_RE.finditer(t):
         left = t[max(0, m.start() - 120):m.start()]
@@ -557,17 +674,17 @@ def format_salary(lo, hi, cur: str, raw: str = "") -> str:
 # ---------------------------------------------------------------------------
 
 MATERIALS = {
-    "Cover letter": r"cover letter|letter of (application|interest)|application letter",
-    "CV": r"\bcv\b|curriculum vita|resume|résumé",
+    "Cover letter": r"cover letter|letter of (application|interest)|application letter|求职信|申请信",
+    "CV": r"\bcv\b|curriculum vita|resume|résumé|简历",
     "Job market paper": r"job[- ]market paper|\bjmp\b",
     "Research papers": r"(research|working) papers?|writing samples?|samples? of (research|scholarship|written work)|"
-                       r"(publications|papers) (and|or) working papers|research samples?",
-    "Research statement": r"research (statement|agenda|plan|interests? statement)|statement of research",
-    "Teaching statement": r"teaching (statement|philosophy|portfolio)|statement of teaching",
-    "Teaching evaluations": r"teaching evaluations?|evidence of teaching (effectiveness|excellence|quality)|course evaluations",
+                       r"(publications|papers) (and|or) working papers|research samples?|代表作|代表性论文|工作论文",
+    "Research statement": r"research (statement|agenda|plan|interests? statement)|statement of research|研究计划|研究陈述",
+    "Teaching statement": r"teaching (statement|philosophy|portfolio)|statement of teaching|教学陈述|教学计划",
+    "Teaching evaluations": r"teaching evaluations?|course evaluations|student evaluations",
     "Diversity statement": r"diversity (statement|and inclusion statement)|statement (on|of) (diversity|contributions to diversity)|dei statement|inclusive excellence statement",
     "Reference letters": r"letters? of (recommendation|reference)|reference letters?|recommendation letters?|"
-                         r"(three|3|two|2|four|4) (letters|references|referees)|names? (and contact information )?of (three|3|referees|references)",
+                         r"(three|3|two|2|four|4) (letters|references|referees)|names? (and contact information )?of (three|3|referees|references)|推荐信",
     "Transcripts": r"transcripts?",
 }
 _MATERIAL_RES = {k: re.compile(v, re.I) for k, v in MATERIALS.items()}
@@ -605,7 +722,7 @@ def detect_interview_venues(text: str) -> list[str]:
 _REQ_RE = re.compile(
     r"(ph\.?\s?d|doctora|qualif|require|must (have|hold|possess)|should (have|hold|possess)|expected to|"
     r"candidates? (will|should|must)|successful candidate|record of|potential for|demonstrat|abd|"
-    r"teach(ing)? (load|responsibilit|courses?)|research (excellence|productivity|agenda)|publish)",
+    r"teach(ing)? (load|responsibilit|courses?)|research (excellence|productivity|agenda)|publish|要求|具有|具备|博士|条件)",
     re.I,
 )
 
@@ -613,7 +730,7 @@ _REQ_RE = re.compile(
 def requirement_highlights(text: str, max_chars: int = 700) -> str:
     """Pick the sentences that state qualifications / expectations."""
     t = re.sub(r"\s+", " ", text or "")
-    sentences = re.split(r"(?<=[.!?;])\s+(?=[A-Z•\-*])", t)
+    sentences = re.split(r"(?<=[.!?;])\s+(?=[A-Z•\-*])|(?<=[。；])", t)
     picked: list[str] = []
     total = 0
     for s in sentences:
@@ -675,7 +792,8 @@ COUNTRY_REGION = {
     "Singapore": "Asia-Pacific", "Japan": "Asia-Pacific", "South Korea": "Asia-Pacific", "Australia": "Asia-Pacific",
     "New Zealand": "Asia-Pacific", "India": "Asia-Pacific", "Malaysia": "Asia-Pacific", "Thailand": "Asia-Pacific",
     "Indonesia": "Asia-Pacific", "Vietnam": "Asia-Pacific", "Philippines": "Asia-Pacific", "Pakistan": "Asia-Pacific",
-    "Kazakhstan": "Asia-Pacific",
+    "Kazakhstan": "Asia-Pacific", "Uzbekistan": "Asia-Pacific", "Bangladesh": "Asia-Pacific",
+    "Sri Lanka": "Asia-Pacific", "Mongolia": "Asia-Pacific", "Macao": "Greater China",
     "Germany": "Europe", "France": "Europe", "Netherlands": "Europe", "Switzerland": "Europe", "Italy": "Europe",
     "Spain": "Europe", "Portugal": "Europe", "Belgium": "Europe", "Austria": "Europe", "Sweden": "Europe",
     "Norway": "Europe", "Denmark": "Europe", "Finland": "Europe", "Iceland": "Europe", "Luxembourg": "Europe",
@@ -708,9 +826,24 @@ _COUNTRY_ALIASES = {
     "be": "Belgium", "at": "Austria", "pt": "Portugal", "nz": "New Zealand", "in": "India", "il": "Israel",
     "ae": "United Arab Emirates", "qa": "Qatar", "tw": "Taiwan", "mo": "Macau", "br": "Brazil", "mx": "Mexico",
     "cl": "Chile",
+    # ISO 3166 alpha-2 codes used by job boards
+    "us": "United States", "gb": "United Kingdom", "eg": "Egypt", "my": "Malaysia", "lb": "Lebanon", "tr": "Turkey",
+    "sa": "Saudi Arabia", "uz": "Uzbekistan", "gr": "Greece", "kz": "Kazakhstan", "kw": "Kuwait", "bh": "Bahrain",
+    "om": "Oman", "pk": "Pakistan", "th": "Thailand", "vn": "Vietnam", "id": "Indonesia", "ph": "Philippines",
+    "za": "South Africa", "ng": "Nigeria", "ke": "Kenya", "ma": "Morocco", "gh": "Ghana", "co": "Colombia",
+    "pe": "Peru", "ar": "Argentina", "uy": "Uruguay", "cr": "Costa Rica", "ec": "Ecuador", "pl": "Poland",
+    "cz": "Czech Republic", "hu": "Hungary", "ro": "Romania", "bg": "Bulgaria", "sk": "Slovakia", "si": "Slovenia",
+    "hr": "Croatia", "rs": "Serbia", "ua": "Ukraine", "ru": "Russia", "ee": "Estonia", "lv": "Latvia",
+    "lt": "Lithuania", "lu": "Luxembourg", "is": "Iceland", "mt": "Malta", "cy": "Cyprus", "mc": "Monaco",
+    "li": "Liechtenstein", "bd": "Bangladesh", "lk": "Sri Lanka", "mn": "Mongolia",
 }
 _CHINA_CITIES = re.compile(r"\b(beijing|shanghai|shenzhen|guangzhou|hangzhou|nanjing|wuhan|chengdu|xiamen|tianjin|"
                            r"xi'?an|suzhou|ningbo|dalian|jinan|qingdao|changsha|hefei|chongqing|zhuhai|kunshan)\b", re.I)
+
+
+_CHINA_CITIES_ZH = re.compile(r"北京|上海|广州|深圳|杭州|南京|武汉|成都|西安|天津|厦门|重庆|长沙|合肥|济南|青岛|大连|苏州|"
+                              r"海口|海南|珠海|昆山|宁波|沈阳|哈尔滨|长春|兰州|昆明|南昌|福州|郑州|太原|石家庄|中国|清华|北大|复旦|"
+                              r"交大|浙大|人大|中山大学|南开|武大|厦大|财经大学")
 
 
 def _norm_country(c: str) -> str:
@@ -742,10 +875,16 @@ def detect_country(location: str = "", country: str = "", text: str = "") -> str
         return "United States"
     if any(p.lower() in loc.lower() for p in CA_PROVINCES):
         return "Canada"
-    if _CHINA_CITIES.search(loc):
+    if _CHINA_CITIES.search(loc) or _CHINA_CITIES_ZH.search(loc):
         return "China"
+    for zh_name, name in (("香港", "Hong Kong"), ("澳门", "Macau"), ("台湾", "Taiwan"), ("台北", "Taiwan")):
+        if zh_name in loc:
+            return name
     probe = (text or "")[:800]
-    if _CHINA_CITIES.search(probe):
+    for zh_name, name in (("香港", "Hong Kong"), ("澳门", "Macau")):
+        if zh_name in probe[:200]:
+            return name
+    if _CHINA_CITIES.search(probe) or _CHINA_CITIES_ZH.search(probe):
         return "China"
     for name in ("Hong Kong", "Singapore", "United Kingdom", "Canada", "Australia"):
         if re.search(rf"\b{name}\b", probe):
