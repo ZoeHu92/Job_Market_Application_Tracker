@@ -103,8 +103,7 @@ def _block_text(a) -> str:
 
 
 def listing_links(html: str, base_url: str = "") -> list[tuple[str, str, str]]:
-    """(title, url, surrounding text) for every faculty-job link in an alert e-mail or a saved
-    job-board page."""
+    """(title, url, surrounding text) for every faculty-job link in an alert e-mail."""
     from urllib.parse import urljoin
 
     out, seen = [], set()
@@ -118,20 +117,6 @@ def listing_links(html: str, base_url: str = "") -> list[tuple[str, str, str]]:
         seen.add(title.lower())
         out.append((title, href, _block_text(a)))
     return out
-
-
-def jobs_from_saved_page(html: str, board: str, base_url: str = "", today: date | None = None) -> list[RawJob]:
-    """Postings from a job-board page you saved in your browser while logged in (e.g. FMA)."""
-    today = today or date.today()
-    m = re.search(r'<base[^>]+href="([^"]+)"', html, re.I)
-    base_url = base_url or (m.group(1) if m else "")
-    jobs = []
-    for title, href, ctx in listing_links(html, base_url):
-        inst = _institution_from_context(ctx.replace("\n", "  "), title) or institution_from_text(ctx)
-        jobs.append(RawJob(source=f"{board} (saved page)", source_id=stable_id(f"{title.lower()}|{inst.lower()}"),
-                           url=href, title=title, institution=inst, description=ctx, posted_date=today.isoformat(),
-                           categories=f"imported from saved {board} page", default_field="Finance" if board == "FMA" else ""))
-    return jobs
 
 
 def parse_message(msg, today: date | None = None) -> list[RawJob]:

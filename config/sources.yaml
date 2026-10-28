@@ -165,7 +165,7 @@ sources:
     verified: "2026-10-28"
 
   - name: SJTU-Antai
-    label: 上海交大安泰经管学院 师资招聘 (SJTU Antai faculty recruitment)
+    label: SJTU Antai College of Economics and Management, faculty recruitment notices
     homepage: https://acem.sjtu.edu.cn/faculty/teacher.html
     kind: board
     enabled: true
@@ -178,7 +178,7 @@ sources:
     verified: "2026-10-28"
 
   - name: EFN-China
-    label: 中国经济学教育科研网 招聘·教学研究 (efnchina.com faculty notices)
+    label: China Economics Education and Research Network (efnchina.com), faculty notices
     homepage: https://www.efnchina.com/zp/jxyj.htm
     kind: board
     enabled: true

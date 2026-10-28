@@ -76,7 +76,7 @@ FIELD_PATTERNS: dict[str, list[str]] = {
     "Business Law & Ethics": [r"\bbusiness law\b", r"\blegal studies\b", r"\bbusiness ethics\b", r"\blaw and ethics\b"],
     "Hospitality & Tourism": [r"\bhospitality\b", r"\btourism\b", r"\bhotel\b"],
 }
-# Chinese-language postings (CJK characters are \\w, so these patterns have no \\b).
+# Keywords as written on Chinese-language university sites (CJK characters are \w, so no \b).
 FIELD_PATTERNS_ZH: dict[str, list[str]] = {'Finance': ['金融', '投资学', '资产定价', '公司财务'], 'Accounting': ['会计', '审计', '财务管理', '税务'], 'Marketing': ['营销'], 'Management & Strategy': ['战略', '企业管理', '工商管理'], 'Organizational Behavior & HR': ['组织行为', '组织管理', '人力资源', '领导力'], 'Operations & Supply Chain': ['运营管理', '运作管理', '供应链', '物流', '管理科学', '运筹'], 'Information Systems': ['信息系统', '信息管理', '信息、技术与创新', '信息技术与创新'], 'Business Analytics & Statistics': ['商业分析', '商务智能', '大数据', '统计学'], 'Economics': ['经济学', '经济系'], 'Real Estate': ['房地产'], 'Insurance & Risk': ['保险', '精算', '风险管理'], 'Entrepreneurship & Innovation': ['创业'], 'International Business': ['国际商务'], 'Hospitality & Tourism': ['旅游', '酒店管理']}
 for _f, _pats in FIELD_PATTERNS_ZH.items():
     FIELD_PATTERNS[_f] = FIELD_PATTERNS[_f] + _pats
@@ -309,7 +309,7 @@ def detect_rank(title: str, description: str = "", region: str = "") -> tuple[st
 
 
 def _rank_from_text(d: str) -> str:
-    """Rank words in an English description, for titles like '金融系2027年度招聘'."""
+    """Rank words in an English description, for titles that name no rank (e.g. Chinese notices)."""
     if re.search(r"all (ranks|levels)|open[- ]rank|any rank", d):
         return "Open rank"
     asst = "assistant professor" in d
@@ -327,7 +327,8 @@ def _rank_from_text(d: str) -> str:
 
 
 def _rank_zh(title: str, desc: str) -> str:
-    """Rank from Chinese wording (助理教授 / 副教授 / 教授 / 讲师 / 博士后)."""
+    """Rank from the Chinese wording used on Chinese university sites (assistant / associate / full
+    professor, lecturer, postdoc)."""
     for text in (title, desc):
         if not text:
             continue
@@ -629,7 +630,7 @@ def extract_salary(text: str) -> dict:
         a, b = float(m.group("a") or m.group("a2")), float(m.group("b") or m.group("b2"))
         if 5 <= a <= b <= 1000:
             return {"salary_min": a * 10000, "salary_max": b * 10000, "salary_currency": "CNY",
-                    "salary_text": f"RMB {a:g}–{b:g}万/yr"}
+                    "salary_text": f"CNY {a * 10000:,.0f}–{b * 10000:,.0f} /yr"}
     best = None
     for m in _SAL_RE.finditer(t):
         left = t[max(0, m.start() - 120):m.start()]

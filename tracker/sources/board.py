@@ -360,7 +360,7 @@ _ZH_INST = re.compile(r"[\u4e00-\u9fa5]{2,10}大学(?:[\u4e00-\u9fa5]{2,12}?(?:�
 
 
 def institution_from_text(text: str) -> str:
-    """Chinese notices name the school in the title: 西南财经大学经济学院教师招聘公告 → 西南财经大学经济学院."""
+    """Chinese notices start the title with the university and school name; return that part."""
     m = _ZH_INST.search(text or "")
     return m.group(0) if m else ""
 

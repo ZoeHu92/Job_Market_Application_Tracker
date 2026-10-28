@@ -118,15 +118,3 @@ def test_public_repo_guard(monkeypatch):
     monkeypatch.setenv("TRACKER_IMAP_PASSWORD", "x")
     res = EmailSource({"name": "Email"}).run(set(), imap_factory=FakeIMAP)
     assert res.jobs == [] and "public" in res.notes[0]
-
-
-def test_saved_board_page_import():
-    from tracker.sources.email_alerts import jobs_from_saved_page
-    html = """<html><head><base href="https://www.fma.org/"></head><body><ul>
-      <li><a href="/jobs/101">Assistant Professor of Finance</a> <span>Example University</span> <span>Boston, MA</span></li>
-      <li><a href="/jobs/102">Clinical Professor of Finance</a> <span>Example College</span></li>
-      <li><a href="/login">Member Login</a></li></ul></body></html>"""
-    jobs = jobs_from_saved_page(html, "FMA", today=date(2026, 10, 28))
-    assert [j.title for j in jobs] == ["Assistant Professor of Finance", "Clinical Professor of Finance"]
-    assert jobs[0].url == "https://www.fma.org/jobs/101" and jobs[0].source == "FMA (saved page)"
-    assert jobs[0].institution == "Example University" and jobs[0].default_field == "Finance"
