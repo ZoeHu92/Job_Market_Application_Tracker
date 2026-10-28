@@ -425,19 +425,19 @@ def import_saved_pages() -> None:
     if files and st.button("Import postings", type="primary"):
         from tracker.importer import find_existing, jobs_from_saved_page
         jobs = A.load_manual_jobs()
-        existing = list(zip(DF.index, DF["title"], DF["institution"]))
+        existing = list(zip(DF.index, DF["title"], DF["institution"], DF["field"]))
         found = added = 0
         for f in files:
             for raw in jobs_from_saved_page(f.getvalue().decode("utf-8", "replace"), board, today=TODAY):
                 found += 1
-                if find_existing(raw.title, raw.institution, existing):
-                    continue
                 row = enrich(raw, TODAY, keep_description=True)
+                if find_existing(raw.title, raw.institution, existing, row["field"]):
+                    continue
                 jid = A.new_manual_id()
                 row.update(job_id=jid, source=raw.source, source_id=jid.split(":", 1)[1], status="Open",
                            first_seen=TODAY.isoformat(), last_seen=TODAY.isoformat())
                 jobs[jid] = row
-                existing.append((jid, row["title"], row["institution"]))
+                existing.append((jid, row["title"], row["institution"], row["field"]))
                 added += 1
         A.save_manual_jobs(jobs)
         if found:

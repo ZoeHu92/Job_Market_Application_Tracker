@@ -65,7 +65,7 @@ FIELD_PATTERNS: dict[str, list[str]] = {
         r"\b(business )?analytics\b", r"\bdata science\b", r"\bstatistics\b", r"\bmachine learning\b",
         r"\bartificial intelligence\b", r"\bquantitative methods\b", r"\bdecision analytics\b",
     ],
-    "Economics": [r"\beconomics\b", r"\beconomist\b", r"\bmanagerial economics\b", r"\bbusiness economics\b"],
+    "Economics": [r"\beconomics\b", r"\beconomist\b"],
     "Real Estate": [r"\breal estate\b", r"\burban land\b", r"\bproperty\b", r"\bjel[: ]*r3\d?"],
     "Insurance & Risk": [r"\binsurance\b", r"\brisk-management\b", r"\bactuarial\b"],
     "Entrepreneurship & Innovation": [
@@ -246,8 +246,8 @@ def detect_rank(title: str, description: str = "", region: str = "") -> tuple[st
     if re.search(r"associate\s*(/|,|or|and|&)\s*(full\s*)?professor", t):
         assoc = True
     plain_prof = bool(re.search(r"\bprofessor\b(?! of (the )?practice)", t)) and not re.search(
-        r"(clinical|teaching|visiting|adjunct|research|assistant|associate|practice)\s+professor", t)
-    full = bool(re.search(r"\bfull\b", t)) or (plain_prof and not asst and not assoc)
+        r"(clinical|teaching|instructional|visiting|adjunct|research|assistant|associate|practice)\s+professor", t)
+    full = bool(re.search(r"\bfull\b(?![- ]?time)", t)) or (plain_prof and not asst and not assoc)
     open_rank = bool(re.search(r"open[- ]rank|all ranks|any rank|rank open|rank is open|ranks? (are|is) open", t + " " + d[:600]))
 
     if re.search(r"\bdean\b|department (head|chair)|head of (department|school)|director of", t):
@@ -256,7 +256,8 @@ def detect_rank(title: str, description: str = "", region: str = "") -> tuple[st
         rank = "Postdoc"
     elif re.search(r"\bvisiting\b", t):
         rank = "Visiting"
-    elif re.search(r"clinical|teaching (professor|track|faculty|stream)|professor of (the )?practice|practice professor|"
+    elif re.search(r"clinical|(teaching|instructional) (professor|track|faculty|stream)|professor of (the )?practice|"
+                   r"practice professor|general faculty|"
                    r"\binstructor\b|\badjunct\b|lecturer in practice|professional track|pro tem|non[- ]tenure|"
                    r"part[- ]time|practice track", t):
         rank = "Clinical/Teaching"
