@@ -81,3 +81,10 @@ def test_portable_build_uses_per_user_folder(monkeypatch, tmp_path):
     monkeypatch.setattr(paths.Path, "home", lambda: tmp_path)
     assert paths.home_dir().name == "AcademicJobTracker"
     assert paths.APP_DIR not in paths.home_dir().parents
+
+
+def test_daily_backup_covers_ticks_and_added_jobs(root):
+    _tick("AFA:1", date(2026, 10, 1), planned=True)
+    A.save_manual_jobs({"Manual:abc": {"job_id": "Manual:abc", "title": "Assistant Professor of Finance"}})
+    names = sorted(p.name.rsplit("-", 3)[0] for p in paths.backup_dir().glob("*.csv"))
+    assert names == ["applications", "manual_jobs"]

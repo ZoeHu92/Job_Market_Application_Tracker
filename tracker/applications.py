@@ -3,7 +3,7 @@
 applications.csv  one row per job you have touched (ticks, dates, notes)
 manual_jobs.csv   postings you added yourself (from an email, a school website, ...)
 preferences.json  your default filters in the app
-backups/          a dated copy of applications.csv, one per day (last 60 kept)
+backups/          a dated copy of applications.csv and manual_jobs.csv, one per day (last 60 kept)
 """
 from __future__ import annotations
 
@@ -75,13 +75,13 @@ def save_applications(apps: dict[str, dict], path: Path | None = None) -> None:
 
 
 def _daily_backup(path: Path, keep: int = 60) -> None:
-    if path != paths.apps_file():
+    if path not in (paths.apps_file(), paths.manual_file()):
         return
     backups = paths.backup_dir()
     backups.mkdir(parents=True, exist_ok=True)
-    target = backups / f"applications-{date.today():%Y-%m-%d}.csv"
+    target = backups / f"{path.stem}-{date.today():%Y-%m-%d}.csv"
     shutil.copyfile(path, target)
-    for old in sorted(backups.glob("applications-*.csv"))[:-keep]:
+    for old in sorted(backups.glob(f"{path.stem}-*.csv"))[:-keep]:
         old.unlink(missing_ok=True)
 
 
@@ -159,6 +159,7 @@ def save_manual_jobs(jobs: dict[str, dict], path: Path | None = None) -> None:
         for jid in sorted(jobs):
             w.writerow({c: jobs[jid].get(c, "") for c in JOB_COLUMNS})
     tmp.replace(path)
+    _daily_backup(path)
 
 
 def new_manual_id() -> str:

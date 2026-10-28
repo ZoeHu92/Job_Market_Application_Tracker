@@ -40,6 +40,9 @@ jobs:
         run: |
           V="${{ inputs.version }}"
           if [ -z "$V" ]; then V="${GITHUB_REF_NAME#v}"; fi
+          # The app compares its own version with the newest release, so the two must agree.
+          CODE=$(sed -n 's/^__version__ = "\(.*\)"/\1/p' tracker/__init__.py)
+          if [ "$V" != "$CODE" ]; then echo "::error::Release $V but tracker/__init__.py says $CODE"; exit 1; fi
           echo "VERSION=$V" >> "$GITHUB_ENV"
 
       - name: Build portable folder and zip

@@ -296,8 +296,8 @@ def welcome() -> None:
     st.info(
         "**No postings yet.** The job list fills up after the first weekly scrape. Either:\n\n"
         "1. On GitHub: **Actions → Weekly job scrape → Run workflow** (then *Get latest data* on the Data & sources page), or\n"
-        "2. **Data & sources → Run the scraper on this computer**, or\n"
-        "3. Add postings yourself on the **Add a job** page.", icon="👋")
+        "2. **Data & sources → Run the scraper now** (on this computer), or\n"
+        "3. Add postings yourself on the **Add jobs** page.", icon="👋")
 
 
 def page_jobs() -> None:
@@ -487,7 +487,7 @@ def import_saved_pages() -> None:
     st.markdown(
         "1. Log in to the board in your browser and open its job list (FMA: *For Job Seekers → View Positions on "
         "the Professional Job Board*).\n"
-        "2. Save the page: **Ctrl+S** (Windows) or **Cmd+S** (Mac).\n"
+        "2. Save the page: **Ctrl+S** (Windows) or **Cmd+S** (Mac). In Safari choose *Format: Page Source*.\n"
         "3. Drop the saved `.html` file(s) here. Postings already in the tracker, from any board, are skipped.")
     c1, c2 = st.columns([1, 3])
     board = c1.selectbox("Board", ["FMA", "AMA", "AOM", "INFORMS", "AIS", "jobs.ac.uk", "Other"], key="import_board")
@@ -608,6 +608,8 @@ def progress_folder_section() -> None:
         st.success(f"Synced folder: `{current}`", icon="☁️")
     else:
         st.info(f"This computer only: `{current}`", icon="💻")
+    st.caption("Your progress is private: it is kept only in this folder and is never uploaded to GitHub or "
+               "anywhere else. See PRIVACY.md in the repository for details.")
     st.markdown(
         "**Use the tracker on several computers:** keep your progress in a cloud-drive folder (iCloud Drive, "
         "OneDrive, Dropbox, Google Drive, Nutstore). Choose the same folder on each computer; ticks, dates, notes "

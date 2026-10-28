@@ -16,6 +16,14 @@ insurance and more).
 * A weekly **digest issue** opens on GitHub (GitHub emails it to you): new postings by field, deadlines in the
   next 14 days, and postings closed that week.
 
+> **Your progress is private.** Ticks, dates, notes and the jobs you add are stored only on your own computer, or
+> in a cloud-drive folder you choose. They are never uploaded to GitHub or anywhere else, and every user's
+> progress is separate. This repository only holds the code and public job ads. No passwords are needed.
+> Details: **[PRIVACY.md](PRIVACY.md)**.
+
+**Guides:** [User guide](docs/USER_GUIDE.md) (install, tracking, weekly routine, FMA import, sync, backups,
+troubleshooting) · [Privacy and security](PRIVACY.md)
+
 ## Download and start
 
 Get the latest version from the **[Releases page](https://github.com/ZoeHu92/Job_Market_Application_Tracker/releases/latest)**.
@@ -24,16 +32,30 @@ It includes its own Python, so nothing else needs to be installed.
 | Computer | Download | Start |
 |---|---|---|
 | Windows | `…-windows-setup.exe` (installer) or `…-windows-x64.zip` (no install) | Run the installer, then use the Start-menu entry; or unzip and double-click **Start Job Tracker.bat**. If Windows says "Windows protected your PC": *More info → Run anyway*. |
-| Mac (Apple chip) | `…-macos-apple-silicon.zip` | Unzip, **right-click** **Start Job Tracker.command** → *Open* → *Open* (first time only). |
+| Mac (Apple chip) | `…-macos-apple-silicon.zip` | Unzip and double-click **Start Job Tracker.command**. The first time, macOS blocks it (the app is not signed by Apple): click *Done*, then **System Settings → Privacy & Security → Open Anyway**. On macOS 14 or older: right-click the file → *Open* → *Open*. |
 | Mac (Intel) | `…-macos-intel.zip` | Same as above. |
 
 The tracker opens in your browser. Keep the small window that starts with it open while you use it; close it to
 quit. To update, install or unzip the newer version; your progress is stored separately and is kept. The app
-tells you when a new version is out.
+tells you when a new version is out. Step-by-step help: [User guide → Install and start](docs/USER_GUIDE.md#1-install-and-start).
 
 **From source instead** (for developers): `git clone` this repository, then double-click `start_tracker.command`
 (Mac) or `start_tracker.bat` (Windows); they set up Python packages on first run. Or run
 `pip install -r requirements.txt` and `python launch.py`.
+
+## Your weekly routine
+
+**Automatic, every Monday** (about 12:17 UTC): GitHub collects new postings from all boards, marks filled or
+removed ones as *Closed*, and opens a digest issue that GitHub notifies you about. It runs on GitHub's servers,
+so your computer can be off, and it costs nothing. When you next open the app, it downloads the new list.
+
+**Your part, about 10 minutes:**
+
+1. Read the digest, or set the app's sidebar *Posted within* to 7 days.
+2. Save FMA's job list page (Ctrl/Cmd+S) and drop it into **Add jobs** (see
+   [below](#fma-and-other-member-only-boards-no-password-needed)).
+3. Tick ⭐ / *Plan* on the jobs you want and *Applied* once you have applied.
+4. Check **My applications → To apply** for upcoming deadlines.
 
 ## Use it on several computers
 
@@ -48,15 +70,22 @@ sync. If both computers already had progress, it is merged (the newest change fo
   notices it and offers a one-click merge.
 * The weekly job list is downloaded by each computer itself; only your own progress is synced.
 
-## Turning on the weekly scrape (one time)
+## Keeping the weekly scrape running
 
-1. Make sure the branch holding this code is the repository's **default branch** (Settings → General → Default
-   branch). Scheduled workflows run only there.
-2. Open **Actions → Weekly job scrape → Run workflow** once to fill `data/` right away. After that it runs every
-   Monday.
-3. To scrape twice a week during peak season, add a second `cron` line in `.github/workflows/weekly_scrape.yml`.
+The weekly scrape (`.github/workflows/weekly_scrape.yml`) is already active and needs no regular attention:
 
-You can also scrape from your own computer at any time: **Data & sources → Run the scraper now** in the app.
+* It runs only on the repository's **default branch** (Settings → General → Default branch), so keep the workflow
+  file there.
+* **Check that it ran:** the Monday digest arrives, and the app's Jobs page says *"Data from <date>"*. If a digest
+  is missing, open **Actions → Weekly job scrape**: a red ✗ shows what failed, and **Run workflow** retries.
+* A board that fails one week keeps all its postings and is retried the next week. If the same board fails
+  several weeks in a row, its website has probably changed: open an issue.
+* GitHub pauses scheduled workflows in public repositories after 60 days without activity. The weekly data
+  commits count as activity; if GitHub ever reports the workflow disabled, click **Enable workflow** in Actions.
+* To collect twice a week in peak season, add a second `cron` line, e.g. `- cron: "17 12 * * 4"` (Thursdays).
+
+You can also scrape at any time: **Actions → Weekly job scrape → Run workflow** on GitHub, or **Data & sources →
+Run the scraper now** in the app. More: [User guide → section 10](docs/USER_GUIDE.md#10-keeping-the-weekly-scrape-running-repository-owner).
 
 ## Job boards
 
@@ -90,7 +119,7 @@ on the boards above; for the rest, use the saved-page import below.
 
 1. Log in to FMA as usual and open the job list (*For Job Seekers → View Positions on the Professional Job
    Board*).
-2. Save the page: **Ctrl+S** (Windows) or **Cmd+S** (Mac).
+2. Save the page: **Ctrl+S** (Windows) or **Cmd+S** (Mac). In Safari, choose *Format: Page Source*.
 3. In the app, open **Add jobs** and drop the saved `.html` file(s) in. Every posting on the page is added and
    parsed. Postings already tracked from another board (for example the same job on AFA) are skipped.
 
@@ -118,22 +147,28 @@ weekly reading on GitHub instead, make the repository private and add the secret
 | **Add jobs** | Import saved pages from FMA and other member-only boards, or add one posting by pasting its link or text. |
 | **Data & sources** | When the data was collected, which boards worked, download / scrape buttons, Excel export, backup / restore and the optional e-mail reader. |
 
-Click **Save as default** in the sidebar to keep your filters (for example, Finance + Entry level).
+Click **Save as default** in the sidebar to keep your filters (for example, Finance + Entry level). The
+[user guide](docs/USER_GUIDE.md) explains every page, the tick boxes and the filters.
 
 ## Privacy and security
 
+Full details, including a list of every file and every internet connection: **[PRIVACY.md](PRIVACY.md)**.
+
 * **Your progress is private and separate for every user.** Ticks, dates, notes, added jobs and preferences are
-  stored only on your computer (or in the cloud-drive folder you choose): in a release build under
-  `%APPDATA%\AcademicJobTracker` (Windows) or `~/Library/Application Support/AcademicJobTracker` (Mac); in a
-  source checkout under `my_data/`, which is listed in `.gitignore`. Nothing is uploaded to GitHub or anywhere
-  else, and someone else using this tracker has their own, separate progress.
+  stored only on your computer: in a release build under `%APPDATA%\AcademicJobTracker` (Windows) or
+  `~/Library/Application Support/AcademicJobTracker` (Mac); in a source checkout under `my_data/`, which is
+  listed in `.gitignore`. They move only if you pick a cloud-drive folder yourself. Nothing is uploaded to GitHub
+  or anywhere else. Someone else using this tracker has their own, separate progress, and nobody (including the
+  repository owner) can see yours.
 * **What is public:** this repository's code and the weekly list of job postings in `data/` (public job ads,
-  without their full text). The weekly digest issues contain the same public information.
+  without their full text), the weekly digest issues and the Actions logs. None of them contain anything about
+  you or your applications.
 * **Network access:** the app only listens on your own computer (`localhost`), so other people on the same Wi-Fi
   cannot open it. It contacts GitHub (to download the weekly job list and check for a new version) and, only when
-  you click those buttons, job boards or posting links.
-* **Passwords:** none are needed. Member-only boards are imported from pages you save yourself. The optional
-  e-mail reader stores a revocable app password in a local file on your computer only (never in a synced folder).
+  you click those buttons, job boards or posting links. It has no analytics or usage tracking.
+* **Passwords:** none are needed. Member-only boards are imported from pages you save yourself; the saved files
+  are read on your computer and not kept. The optional e-mail reader stores a revocable app password in a local
+  file on your computer only (never in a synced folder).
 * **Backups:** a dated copy of your progress is kept every day (last 60) in the `backups` folder next to it;
   *Data & sources → Back up my statuses* downloads a copy you can keep anywhere.
 * While the repository is public, full posting texts are not stored in it (`keep_full_description: false` in
@@ -151,6 +186,8 @@ Postings that come back are re-opened.
 
 ```
 app.py, launch.py          Streamlit app and its launcher
+docs/USER_GUIDE.md         step-by-step user guide
+PRIVACY.md                 what is stored where, what is public, what goes over the internet
 tracker/                   scraper + parsing + storage (python -m tracker.scrape)
 config/sources.yaml        job boards
 config/settings.yaml       politeness limits, digest and e-mail options, full-text storage

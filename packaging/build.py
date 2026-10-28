@@ -30,7 +30,8 @@ if errorlevel 1 pause
 """
 
 MAC_LAUNCHER = """#!/bin/bash
-# Double-click to start the tracker (first time: right-click > Open, because this build is not signed by Apple).
+# Double-click to start the tracker. The first time, macOS blocks it because this build is not signed by
+# Apple: see README.txt for the one-time "Open Anyway" step.
 DIR="$(cd "$(dirname "$0")" && pwd)"
 # Files downloaded from the internet are flagged by macOS; clear the flag on this folder once.
 xattr -dr com.apple.quarantine "$DIR" 2>/dev/null
@@ -43,14 +44,18 @@ README_TXT = """Academic Job Market Tracker {version}
 Start:   {start}
 Quit:    close the window that opens with it.
 
-Your progress (ticks, dates, notes, added jobs) is stored on this computer in
+Your progress (ticks, dates, notes, added jobs) is private. It is stored only on
+this computer, in
 {data}
-not in this folder, so you can replace this folder with a newer version at any time.
-To share progress between computers, open Data & sources in the app and pick a
-cloud-drive folder (iCloud Drive, OneDrive, Dropbox, Google Drive, Nutstore).
+and is never uploaded. Because it is kept outside this folder, you can replace this
+folder with a newer version at any time. To share progress between computers, open
+Data & sources in the app and pick a cloud-drive folder (iCloud Drive, OneDrive,
+Dropbox, Google Drive, Nutstore).
 
 The job list updates itself from GitHub each week while you have internet.
-More help: https://github.com/ZoeHu92/Job_Market_Application_Tracker
+
+User guide: https://github.com/ZoeHu92/Job_Market_Application_Tracker/blob/HEAD/docs/USER_GUIDE.md
+Privacy:    https://github.com/ZoeHu92/Job_Market_Application_Tracker/blob/HEAD/PRIVACY.md
 """
 
 
@@ -132,12 +137,17 @@ def main() -> None:
 
     if IS_WIN:
         (out / "Start Job Tracker.bat").write_text(WIN_LAUNCHER.replace("\n", "\r\n"), encoding="ascii")
-        start, data = 'double-click "Start Job Tracker.bat"', r"%APPDATA%\AcademicJobTracker"
+        start = ('double-click "Start Job Tracker.bat".\n'
+                 '         If Windows says "Windows protected your PC": More info > Run anyway.')
+        data = r"%APPDATA%\AcademicJobTracker"
     else:
         launcher = out / "Start Job Tracker.command"
         launcher.write_text(MAC_LAUNCHER, encoding="utf-8")
         launcher.chmod(0o755)
-        start = 'double-click "Start Job Tracker.command" (the first time: right-click it > Open > Open)'
+        start = ('double-click "Start Job Tracker.command".\n'
+                 "         The first time, macOS blocks it because it is not signed by Apple. Click Done,\n"
+                 "         then open System Settings > Privacy & Security, scroll down and click\n"
+                 "         Open Anyway next to it (macOS 14 or older: right-click the file > Open > Open).")
         data = ("~/Library/Application Support/AcademicJobTracker" if sys.platform == "darwin"
                 else "~/.local/share/AcademicJobTracker")
     (out / "README.txt").write_text(README_TXT.format(version=args.version, start=start, data=data), encoding="utf-8")
