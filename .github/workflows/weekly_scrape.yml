@@ -1,0 +1,62 @@
+# Collects new academic job postings every Monday and commits them to data/.
+# Run it by hand any time: Actions tab -> "Weekly job scrape" -> "Run workflow".
+name: Weekly job scrape
+
+on:
+  schedule:
+    - cron: "17 12 * * 1"   # Mondays 12:17 UTC (8:17 am New York). Add a second line for twice a week.
+  workflow_dispatch:
+    inputs:
+      sources:
+        description: "Only these boards, comma-separated (blank = all enabled boards)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write   # commit data/
+  issues: write     # weekly digest issue
+
+concurrency:
+  group: weekly-scrape
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install
+        run: pip install -r requirements.txt
+
+      - name: Scrape job boards
+        env:
+          SOURCES: ${{ inputs.sources }}
+        run: python -m tracker.scrape --sources "$SOURCES"
+
+      - name: Commit new data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          if git diff --cached --quiet; then echo "No changes."; exit 0; fi
+          git commit -m "Weekly job data $(date -u +%F)"
+          for i in 1 2 3; do git pull --rebase --quiet && git push && break; sleep 5; done
+
+      - name: Post weekly digest issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          enabled=$(python -c "from tracker.config import load_settings; print(int(bool(load_settings().get('weekly_digest_issue'))))")
+          if [ "$enabled" != "1" ]; then echo "Digest disabled in config/settings.yaml"; exit 0; fi
+          # Close last week's digest so only the current one stays open.
+          gh issue list --state open --search "Job market digest in:title" --json number --jq '.[].number' \
+            | xargs -r -n1 gh issue close
+          gh issue create --title "Job market digest $(date -u +%F)" --body-file data/weekly_digest.md

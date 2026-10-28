@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+.DS_Store
+.pytest_cache/
+.streamlit/secrets.toml
+*.tmp
+
+# Your personal application statuses stay on your own computer (this repository is public).
+my_data/

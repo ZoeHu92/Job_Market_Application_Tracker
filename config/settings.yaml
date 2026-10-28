@@ -1,0 +1,19 @@
+# Tracker settings. The weekly GitHub Actions run and the local app both read this file.
+
+# Keep the full posting text in data/jobs.csv. Leave false while this repository is
+# public (the text belongs to the job boards); set true if you make the repo private.
+keep_full_description: false
+
+# Politeness: seconds between requests to the same site, and caps per weekly run.
+request_delay_seconds: 1.5
+max_new_details_per_source: 300
+closure_checks_per_source: 60
+
+# Open a GitHub issue each week summarising new / closing / closed postings.
+# GitHub emails you about new issues in your own repository.
+weekly_digest_issue: true
+# Fields listed in the digest; empty list = all fields. Example: [Finance, Accounting]
+digest_fields: []
+
+# Where the local app downloads the latest weekly data from (owner/repo).
+github_repo: ZoeHu92/Job_Market_Application_Tracker

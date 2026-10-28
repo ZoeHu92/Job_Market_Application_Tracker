@@ -1,0 +1,212 @@
+# Job boards scraped every week.
+#
+#   kind: board          generic crawler: RSS/Atom feeds and/or listing pages, then each new
+#                        posting's page (schema.org JobPosting data + labeled fields + text)
+#   kind: econjobmarket  EconJobMarket's public JSON feed of open ads
+#
+#   filter: none      keep every posting (board only lists academic finance jobs, etc.)
+#           faculty   drop staff/administrative jobs
+#           business  faculty jobs in business-school fields only (for broad boards)
+#
+#   job_link_pattern  regex matching a posting URL; group 1 is the board's posting id
+#   page_param        query parameter for page 2, 3, ... when no "next" link is found
+#   verified          date the URLs/patterns were last checked against the live site.
+#                     Entries with no date have not yet been confirmed; the Data & sources
+#                     tab in the app (and data/scrape_report.json) shows whether each works.
+
+sources:
+  # ---- Finance ---------------------------------------------------------------------
+  - name: AFA
+    label: American Finance Association career center
+    homepage: https://careers.afajof.org/
+    kind: board
+    enabled: true
+    default_field: Finance
+    filter: faculty
+    feeds: ["https://careers.afajof.org/jobsrss/"]
+    start_urls: ["https://careers.afajof.org/jobs/"]
+    job_link_pattern: 'careers\.afajof\.org/job/(\d+)'
+    page_param: Page
+    max_pages: 25
+    verified: ""
+
+  - name: FMA
+    label: Financial Management Association placement (may require FMA member login)
+    homepage: https://www.fma.org/
+    kind: board
+    enabled: true
+    default_field: Finance
+    filter: faculty
+    start_urls: ["https://www.fma.org/placement"]
+    discover_feeds: true
+    job_link_pattern: 'fma\.org/[^#?]*?(?:job|position|listing|placement)s?[/=_-]+(\d{3,})'
+    max_pages: 10
+    verified: ""
+
+  # ---- Economics boards with many business-school postings ----------------------------
+  - name: JOE
+    label: AEA Job Openings for Economists
+    homepage: https://www.aeaweb.org/joe/listings
+    kind: board
+    enabled: true
+    filter: business
+    start_urls: ["https://www.aeaweb.org/joe/listings"]
+    job_link_pattern: 'JOE_ID=([\w-]+)'
+    page_param: page
+    max_pages: 100
+    max_new_details: 600
+    verified: ""
+
+  - name: EJM
+    label: EconJobMarket
+    homepage: https://econjobmarket.org/positions
+    kind: econjobmarket
+    enabled: true
+    api_url: https://backend.econjobmarket.org/data/zz_public/json/Ads
+    verify_closures: false   # the feed lists every open ad, so a missing ad is closed
+    verified: ""
+
+  # ---- Other business disciplines (association career centers) -----------------------
+  - name: AAA
+    label: American Accounting Association career center
+    homepage: https://careercenter.aaahq.org/
+    kind: board
+    enabled: true
+    default_field: Accounting
+    filter: faculty
+    start_urls: ["https://careercenter.aaahq.org/jobs/"]
+    discover_feeds: true
+    job_link_pattern: '/jobs/(\d{5,})'
+    page_param: page
+    max_pages: 20
+    verified: ""
+
+  - name: AMA
+    label: American Marketing Association academic placement
+    homepage: https://academicplacement.ama.org/
+    kind: board
+    enabled: true
+    default_field: Marketing
+    filter: faculty
+    start_urls: ["https://academicplacement.ama.org/jobs/"]
+    discover_feeds: true
+    job_link_pattern: '/jobs/(\d{5,})'
+    page_param: page
+    max_pages: 20
+    verified: ""
+
+  - name: AOM
+    label: Academy of Management career center
+    homepage: https://careers.aom.org/
+    kind: board
+    enabled: true
+    default_field: Management & Strategy
+    filter: faculty
+    start_urls: ["https://careers.aom.org/jobs/"]
+    discover_feeds: true
+    job_link_pattern: '/jobs/(\d{5,})'
+    page_param: page
+    max_pages: 25
+    verified: ""
+
+  - name: INFORMS
+    label: INFORMS career center (operations, analytics)
+    homepage: https://careercenter.informs.org/
+    kind: board
+    enabled: true
+    filter: business
+    start_urls: ["https://careercenter.informs.org/jobs/"]
+    discover_feeds: true
+    job_link_pattern: '/jobs/(\d{5,})'
+    page_param: page
+    max_pages: 20
+    verified: ""
+
+  - name: AIS
+    label: Association for Information Systems academic careers
+    homepage: https://academiccareers.aisnet.org/
+    kind: board
+    enabled: true
+    default_field: Information Systems
+    filter: faculty
+    start_urls: ["https://academiccareers.aisnet.org/jobs/"]
+    discover_feeds: true
+    job_link_pattern: '/jobs/(\d{5,})'
+    page_param: page
+    max_pages: 15
+    verified: ""
+
+  # ---- General academic boards (business-school jobs only) ----------------------------
+  - name: jobs.ac.uk
+    label: jobs.ac.uk (UK and international)
+    homepage: https://www.jobs.ac.uk/
+    kind: board
+    enabled: true
+    filter: business
+    feed_index:
+      - https://www.jobs.ac.uk/feeds/subject-areas/business-and-management-studies
+      - https://www.jobs.ac.uk/feeds/subject-areas/economics
+    feed_index_filter: 'accountancy|finance|marketing|management|business|economics|real estate|human resources'
+    job_link_pattern: 'jobs\.ac\.uk/job/([A-Za-z0-9]+)'
+    verified: ""
+
+  - name: Chronicle
+    label: Chronicle of Higher Education jobs (business)
+    homepage: https://jobs.chronicle.com/
+    kind: board
+    enabled: true
+    filter: business
+    start_urls: ["https://jobs.chronicle.com/jobs/business/"]
+    discover_feeds: true
+    job_link_pattern: 'jobs\.chronicle\.com/job/(\d+)'
+    page_param: Page
+    max_pages: 15
+    verified: ""
+
+  - name: InsideHigherEd
+    label: Inside Higher Ed careers (business & management)
+    homepage: https://careers.insidehighered.com/
+    kind: board
+    enabled: true
+    filter: business
+    start_urls: ["https://careers.insidehighered.com/jobs/business-and-management/"]
+    discover_feeds: true
+    job_link_pattern: 'careers\.insidehighered\.com/job/(\d+)'
+    page_param: Page
+    max_pages: 15
+    verified: ""
+
+  - name: AJO
+    label: AcademicJobsOnline
+    homepage: https://academicjobsonline.org/ajo/jobs
+    kind: board
+    enabled: true
+    filter: business
+    start_urls: ["https://academicjobsonline.org/ajo/jobs"]
+    job_link_pattern: 'academicjobsonline\.org/ajo/jobs/(\d+)'
+    max_pages: 1
+    verified: ""
+
+  # Disabled until their listing URLs are confirmed; enable and adjust when ready.
+  - name: HigherEdJobs
+    label: HigherEdJobs (business faculty)
+    homepage: https://www.higheredjobs.com/
+    kind: board
+    enabled: false
+    filter: business
+    start_urls: ["https://www.higheredjobs.com/faculty/search.cfm?JobCat=48"]
+    job_link_pattern: 'details\.cfm\?JobCode=(\d+)'
+    max_pages: 10
+    verified: ""
+
+  - name: AcademicPositions
+    label: AcademicPositions (Europe)
+    homepage: https://academicpositions.com/
+    kind: board
+    enabled: false
+    filter: business
+    start_urls: ["https://academicpositions.com/jobs/field/business"]
+    job_link_pattern: 'academicpositions\.com/ad/[^/]+/\d+/([\w-]+)'
+    page_param: page
+    max_pages: 10
+    verified: ""
