@@ -2,7 +2,7 @@
 
 ![Academic Job Market Tracker](docs/images/hero.jpg)
 
-A free tracker for the business-school faculty job market: finance, accounting, marketing, management/strategy,
+A free, open-source (MIT) tracker for the business-school faculty job market: finance, accounting, marketing, management/strategy,
 OB/HR, operations, information systems, analytics, business economics, real estate, insurance and more.
 
 **[⬇️ Download for Windows or Mac](https://github.com/ZoeHu92/Job_Market_Application_Tracker/releases/latest)** ·
@@ -226,3 +226,9 @@ python -m pytest -q
 The tests run offline against fake boards and a fake mailbox. They cover the parsers (deadlines, salaries,
 ranks, fields, degree requirements, Chinese text), every adapter, the merge/close rules, the status rules and an
 app smoke test.
+
+## License
+
+The code is released under the [MIT License](LICENSE): use it, change it and share it, keeping the copyright
+notice. The job postings in `data/` belong to the employers and job boards that published them; the tracker
+stores public listing details only, with links to the original ads.

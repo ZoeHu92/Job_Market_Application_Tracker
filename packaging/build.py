@@ -18,7 +18,7 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-APP_FILES = ["app.py", "launch.py", "README.md", "requirements.txt"]
+APP_FILES = ["app.py", "launch.py", "README.md", "requirements.txt", "LICENSE"]
 APP_DIRS = ["tracker", "config", ".streamlit", "data"]
 IS_WIN = sys.platform.startswith("win")
 
