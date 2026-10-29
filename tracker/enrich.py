@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import re
-from datetime import date
+from datetime import date, timedelta
 
 from . import classify as C
 from .schema import JOB_COLUMNS
@@ -39,6 +39,7 @@ def enrich(raw: RawJob, today: date | None = None, keep_description: bool = Fals
             rest = [p for p in dl["deadline_note"].split("; ") if p and not p.lower().startswith("deadline")]
             dl["deadline_note"] = "; ".join([f"Deadline {C.fmt_date(src_deadline)}", *rest])
             dl["deadline"] = src_deadline.isoformat()
+    dl["deadline"], dl["deadline_note"] = far_deadline_as_listing(dl["deadline"], dl["deadline_note"], today)
 
     if raw.salary_min:
         sal = {"salary_min": raw.salary_min, "salary_max": raw.salary_max or raw.salary_min,
@@ -90,6 +91,19 @@ def enrich(raw: RawJob, today: date | None = None, keep_description: bool = Fals
         "content_hash": hashlib.sha1(re.sub(r"\s+", " ", text).encode("utf-8")).hexdigest()[:12] if text else "",
     })
     return row
+
+
+# Application deadlines are weeks or a few months away. A date most of a year ahead ("Dec 31, 2027"
+# for an assistant professor ad) is a placeholder on the board: the ad stays up until the job is filled.
+FAR_DEADLINE_DAYS = 240
+
+
+def far_deadline_as_listing(deadline: str, note: str, today: date) -> tuple[str, str]:
+    """(deadline, note) with a deadline more than FAR_DEADLINE_DAYS ahead moved into the note."""
+    if not deadline or deadline <= (today + timedelta(days=FAR_DEADLINE_DAYS)).isoformat():
+        return deadline, note
+    rest = [p for p in (note or "").split("; ") if p and not p.lower().startswith("deadline")]
+    return "", "; ".join([*rest, f"listed until {C.fmt_date(date.fromisoformat(deadline))}"])
 
 
 def _one_line(location: str) -> str:

@@ -263,3 +263,16 @@ def test_more_business_schools_and_countries():
     assert not C.is_business_school("Higher Education Commission (HEC), Pakistan")
     assert C.business_relevance("Assistant Professor in Sales, Business Development, Negotiation")
     assert C.detect_country("Cambodia / Phnom Penh") == "Cambodia"
+
+
+def test_far_future_board_date_is_not_a_deadline():
+    from tracker.enrich import enrich
+    from tracker.sources.base import RawJob
+    today = date(2026, 10, 29)
+    far = enrich(RawJob(source="THE", source_id="1", url="u", title="Assistant Professor in Accounting",
+                        description="Applications are reviewed until the position is filled.",
+                        deadline_raw="29/10/2027", day_first=True), today)
+    assert far["deadline"] == "" and "listed until Oct 29, 2027" in far["deadline_note"]
+    near = enrich(RawJob(source="THE", source_id="2", url="u", title="Assistant Professor in Accounting",
+                         deadline_raw="15/01/2027", day_first=True), today)
+    assert near["deadline"] == "2027-01-15"
