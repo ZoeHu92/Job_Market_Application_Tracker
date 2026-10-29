@@ -1,15 +1,34 @@
 {
- "started_at": "2026-10-28T20:09:13+00:00",
- "finished_at": "2026-10-28T20:10:17+00:00",
- "run_date": "2026-10-28",
- "requests": 102,
+ "started_at": "2026-10-29T14:47:24+00:00",
+ "finished_at": "2026-10-29T14:49:34+00:00",
+ "run_date": "2026-10-29",
+ "requests": 84,
  "totals": {
-  "jobs": 1536,
-  "open": 1524,
-  "new": 1,
-  "closed": 12
+  "jobs": 1618,
+  "open": 1606,
+  "new": 82,
+  "closed": 0
  },
  "sources": [
+  {
+   "name": "Akadeus",
+   "label": "AKADEUS, business-school faculty positions worldwide (mostly Europe, Asia, Middle East)",
+   "ok": true,
+   "complete": true,
+   "error": "",
+   "pages": 1,
+   "details_fetched": 83,
+   "skipped_filtered": 8,
+   "seconds": 128.8,
+   "notes": [],
+   "run_date": "2026-10-29",
+   "listed": 82,
+   "new": 82,
+   "reopened": 0,
+   "closed": 0,
+   "kept_open": 0,
+   "closures_skipped": ""
+  },
   {
    "name": "AFA",
    "label": "American Finance Association career center",

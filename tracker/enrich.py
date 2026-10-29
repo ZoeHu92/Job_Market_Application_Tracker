@@ -22,10 +22,13 @@ def enrich(raw: RawJob, today: date | None = None, keep_description: bool = Fals
         primary, fields = raw.field_override, [raw.field_override] + [f for f in fields if f != raw.field_override]
     rank, tenure = C.detect_rank(raw.title, text, region)
 
-    posted = C.parse_date_string(raw.posted_date, today)
+    day_first = raw.day_first
+    if day_first is None:
+        day_first = C.numeric_date_order(raw.posted_date, raw.deadline_raw, raw.listing_expires, text)
+    posted = C.parse_date_string(raw.posted_date, today, day_first)
     ref = posted or today
-    dl = C.extract_deadline(full, ref)
-    src_deadline = C.parse_date_string(raw.deadline_raw, ref) if raw.deadline_raw else None
+    dl = C.extract_deadline(full, ref, day_first)
+    src_deadline = C.parse_date_string(raw.deadline_raw, ref, day_first) if raw.deadline_raw else None
     if src_deadline:
         # A board's "closing date" is often when the ad comes down; if the text asks for
         # applications earlier, the earlier date is the one that matters.
@@ -58,7 +61,7 @@ def enrich(raw: RawJob, today: date | None = None, keep_description: bool = Fals
         "title": raw.title.strip(),
         "institution": raw.institution.strip(),
         "department": raw.department.strip(),
-        "location": raw.location.strip(),
+        "location": _one_line(raw.location),
         "country": country,
         "region": region,
         "field": primary,
@@ -78,7 +81,7 @@ def enrich(raw: RawJob, today: date | None = None, keep_description: bool = Fals
         "requirements": C.requirement_highlights(text),
         "categories": raw.categories,
         "posted_date": posted.isoformat() if posted else "",
-        "listing_expires": raw.listing_expires,
+        "listing_expires": _iso_or_raw(raw.listing_expires, today, day_first),
         "url": raw.url,
         "apply_url": raw.apply_url,
         "status": "Open",
@@ -87,3 +90,17 @@ def enrich(raw: RawJob, today: date | None = None, keep_description: bool = Fals
         "content_hash": hashlib.sha1(re.sub(r"\s+", " ", text).encode("utf-8")).hexdigest()[:12] if text else "",
     })
     return row
+
+
+def _one_line(location: str) -> str:
+    """'Australia\n/ Sydney' -> 'Australia / Sydney'; 'Boston, MA\nUnited States' -> 'Boston, MA, United States'."""
+    out = ""
+    for part in (x.strip(" ,") for x in (location or "").splitlines()):
+        if part:
+            out = part if not out else f"{out} {part}" if part.startswith("/") else f"{out}, {part}"
+    return re.sub(r"\s{2,}", " ", out)
+
+
+def _iso_or_raw(value: str, today: date, day_first: bool | None) -> str:
+    d = C.parse_date_string(value, today, day_first) if value else None
+    return d.isoformat() if d else value

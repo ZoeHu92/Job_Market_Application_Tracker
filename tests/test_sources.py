@@ -1,5 +1,7 @@
 import json
+from datetime import date
 
+from tracker.enrich import enrich
 from tracker.sources.board import BoardSource
 from tracker.sources.econjobmarket import EconJobMarketSource
 from tracker.sources.joe import JoeSource
@@ -239,3 +241,38 @@ def test_page_watcher_always_returns_full_records():
     assert res.ok and not res.complete  # one page failed, so nothing is closed
     assert len(res.jobs) == 1 and not res.jobs[0].stub
     assert res.jobs[0].institution == "Example SEM" and res.jobs[0].field_override == "Finance"
+
+
+def _card(i, title, inst, badge=""):
+    """A listing where each link wraps a whole card (AKADEUS style)."""
+    return (f"<a href='/announcement/{i}'><div class='box-2'>{badge}<div><img src='x.jpg'></div>"
+            f"<div class='desc'><h2>{title}</h2><p class='location'>France\n / Paris</p><p class='discipline'>Finance</p>"
+            f"<span class='button'>Read more</span></div><div class='params'><div><p>{inst}</p></div>"
+            f"<div><p><span>Posted:</span> 05/10/2026</p></div></div></div></a>")
+
+
+def test_card_listing_with_badges_and_day_first_dates():
+    listing_html = ("<html><body><div class='itemsList wrapper'><div class='row'><div class='xx-12'>"
+                    + _card(101, "Assistant Professor in Finance", "ESCP Business School",
+                            "<p class='premShowHide'><span>PREMIUM</span></p>")
+                    + _card(102, "PhD Candidate in Marketing", "BI Norwegian Business School")
+                    + "</div></div></div></body></html>")
+    detail_html = ("<html><body><div class='oneItem'><h1>Assistant Professor in Finance</h1>"
+                   "<p><span>Company:</span> ESCP Business School</p><p><span>Location:</span> France\n / Paris</p>"
+                   "<p><span>Posted:</span> 05/10/2026</p><div class='cms'><p>We seek a scholar in empirical "
+                   "asset pricing or corporate finance to join our Finance Department. "
+                   + "The successful candidate will teach in our Master in Finance programme. " * 4
+                   + "</p><p>Closing date: 01/12/2026.</p></div></div></body></html>")
+    cfg = {"name": "Akadeus", "kind": "board", "start_urls": ["https://a.test/announcements"],
+           "job_link_pattern": r"/announcement/(\d+)", "filter": "business", "max_pages": 1, "day_first": True}
+    fetcher = FakeFetcher({"https://a.test/announcements": listing_html,
+                           "https://a.test/announcement/101": detail_html})
+    res = BoardSource(cfg, fetcher).run(set())
+    assert res.ok and res.complete
+    assert [j.source_id for j in res.jobs] == ["101"]          # the PhD place is skipped without a request
+    assert "https://a.test/announcement/102" not in fetcher.calls
+    row = enrich(res.jobs[0], date(2026, 10, 29))
+    assert row["title"] == "Assistant Professor in Finance"     # not the "PREMIUM" badge
+    assert row["institution"] == "ESCP Business School"
+    assert row["location"] == "France / Paris" and row["country"] == "France"
+    assert row["posted_date"] == "2026-10-05" and row["deadline"] == "2026-12-01"

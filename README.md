@@ -97,7 +97,8 @@ Run the scraper now** in the app. More: [User guide → section 10](docs/USER_GU
 | AAA career center | official RSS feed + posting pages | faculty postings (staff jobs dropped) |
 | Chronicle of Higher Education | RSS (business & management, "professor") | business-school faculty only |
 | Inside Higher Ed | RSS (business & management faculty) | business-school faculty only |
-| Times Higher Education unijobs | RSS (business & economics) | UK, Europe, Asia, Australia |
+| Times Higher Education unijobs | listing pages (business & economics) | UK, Europe, Asia, Australia |
+| AKADEUS | announcement list + posting pages | business-school positions worldwide, mostly Europe, Asia and the Middle East |
 | HigherEdJobs | 13 business-faculty category feeds | newest 100 per category |
 | AcademicJobsOnline | RSS feed | business-school listings only |
 | CES (Chinese Economists Society) | job board pages | positions in China |
@@ -106,7 +107,7 @@ Run the scraper now** in the app. More: [User guide → section 10](docs/USER_GU
 | Tsinghua SEM, PBCSF, SAIF | recruitment pages | tracked as one posting each, flagged 🔄 when the page changes |
 | **Saved pages you upload** | app → Add jobs | FMA and other member-only or bot-protected boards |
 
-All boards were checked against the live sites on 2026-10-28 (`verified:` in
+All boards were checked against the live sites in October 2026 (`verified:` in
 [`config/sources.yaml`](config/sources.yaml)). The scraper sends an honest user agent, obeys `robots.txt`
 (including crawl delays), waits between requests and never re-fetches a posting it already has.
 

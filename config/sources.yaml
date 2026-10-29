@@ -13,10 +13,12 @@
 #   partial_listing   the feed shows only the newest N postings, so a posting missing from it
 #                     is not treated as closed (it closes on its deadline / listing expiry instead)
 #   verify_closures   false = the feed lists every open ad, so a missing ad is closed directly
+#   day_first         true = numeric dates are day/month/year (05/11/2026 = 5 November), as on
+#                     European and Australian boards; otherwise each posting's own dates decide
 #   verified          date the configuration was last checked against the live site
 #
 # Boards marked "enabled: false" refuse automated access (bot challenge or member login).
-# Get their postings by email alert instead - see the "email" section in config/settings.yaml.
+# Import their postings from a saved page in the app (Add jobs), or read their e-mail alerts.
 
 sources:
   # ---- Finance -------------------------------------------------------------------------
@@ -106,7 +108,21 @@ sources:
     start_urls: ["https://www.timeshighereducation.com/unijobs/listings/business-and-economics/"]
     max_pages: 15
     job_link_pattern: 'timeshighereducation\.com/unijobs/listing/(\d+)'
+    day_first: true
     verified: "2026-10-28"
+
+  - name: Akadeus
+    label: AKADEUS, business-school faculty positions worldwide (mostly Europe, Asia, Middle East)
+    homepage: https://akadeus.com/announcements
+    kind: board
+    enabled: true
+    filter: business
+    # One page lists every open announcement as a card; each posting's page has the full text.
+    start_urls: ["https://akadeus.com/announcements"]
+    max_pages: 5
+    job_link_pattern: 'akadeus\.com/announcement/(\d+)'
+    day_first: true
+    verified: "2026-10-29"
 
   - name: HigherEdJobs
     label: HigherEdJobs business faculty categories

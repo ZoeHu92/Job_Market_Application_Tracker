@@ -123,11 +123,16 @@ class BoardSource:
             if not self.link_re or not self.link_re.search(href):
                 continue
             sid = self._source_id(href)
-            title = clean_anchor_title(a.get_text("\n")) or clean_text(a.get("title") or "")
+            # A link wrapping a whole card ("PREMIUM", logo, title, school, ...): its heading is the title.
+            heading = a.find(["h1", "h2", "h3", "h4"])
+            title = (clean_text(heading.get_text(" ")) if heading else "") or clean_anchor_title(
+                a.get_text("\n")) or clean_text(a.get("title") or "")
+            context = self._context(a)
+            if not context and heading:
+                context = clean_text(a.get_text("\n"))[:1500]
             prev = found.get(sid)
             if prev is None or len(title) > len(prev["title"]):
-                found[sid] = {"source_id": sid, "url": href.split("#")[0], "title": title,
-                              "context": self._context(a)}
+                found[sid] = {"source_id": sid, "url": href.split("#")[0], "title": title, "context": context}
         return list(found.values())
 
     def _next_page(self, html: bytes | str, base_url: str) -> str:
@@ -308,7 +313,7 @@ class BoardSource:
     def _detail(self, cand: dict, result: SourceResult) -> RawJob | None:
         job = RawJob(source=self.name, source_id=cand["source_id"], url=cand["url"],
                      title=cand.get("title", ""), description=cand.get("summary") or cand.get("context", ""),
-                     default_field=self.cfg.get("default_field", ""),
+                     default_field=self.cfg.get("default_field", ""), day_first=self.cfg.get("day_first"),
                      **{k: cand.get(k, "") for k in _CAND_FIELDS})
         if self.cfg.get("fetch_details", True) and self.blocked < 3:
             try:

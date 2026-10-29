@@ -31,6 +31,7 @@ class RawJob:
     apply_url: str = ""
     default_field: str = ""
     field_override: str = ""   # set by config when the page's own wording is misleading
+    day_first: bool | None = None  # 05/11/2026 means 5 November (set by config; None = infer)
     # True when the job was already known and only its presence was confirmed
     # (no detail page fetched this run).
     stub: bool = False

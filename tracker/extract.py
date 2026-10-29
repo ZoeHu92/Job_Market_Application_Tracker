@@ -303,12 +303,16 @@ def main_text(soup: BeautifulSoup) -> str:
 
 def page_title(soup: BeautifulSoup) -> str:
     h1 = soup.find("h1")
-    if h1 and 6 <= len(h1.get_text(strip=True)) <= 200:
+    if h1 and 6 <= len(h1.get_text(strip=True)) <= 300:
         return clean_text(h1.get_text(" "))
     og = soup.find("meta", attrs={"property": "og:title"})
     raw = og["content"] if og and og.get("content") else (soup.title.get_text(" ") if soup.title else "")
     # "Assistant Professor of Finance | Some Job Board" → drop the site name
-    return re.sub(r"\s+\|\s+[^|]{2,80}$", "", clean_text(raw))
+    title = re.sub(r"\s+\|\s+[^|]{2,80}$", "", clean_text(raw))
+    site = soup.find("meta", attrs={"property": "og:site_name"})
+    if site and site.get("content"):
+        title = re.sub(rf"\s+[-–|]\s+{re.escape(site['content'].strip())}$", "", title, flags=re.I)
+    return title
 
 
 def extract_posting(html: str | bytes, url: str = "") -> dict:

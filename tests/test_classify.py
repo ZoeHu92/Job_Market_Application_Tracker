@@ -210,3 +210,56 @@ def test_business_relevance_rules():
     assert not C.business_relevance("Faculty", "X", "All departments",
                                     "Econometrics; Finance; Macro; Labor; Marketing; Any field; IO")
     assert C.business_relevance("Faculty", "X", "", "Finance")
+
+
+@pytest.mark.parametrize("text,day_first,expected", [
+    ("05/11/2026", None, "2026-05-11"),                                   # US order by default
+    ("05/11/2026", True, "2026-11-05"),                                   # source says day first
+    ("22/10/2026", None, "2026-10-22"),                                   # only day/month is possible
+    ("Posted 22/10/2026. Deadline: 05/11/2026", None, "2026-11-05"),      # the other date decides
+    ("10/22/2026 and 11/05/2026", None, "2026-11-05"),
+    ("30.11.2026", None, "2026-11-30"),                                   # dotted dates are day first
+])
+def test_numeric_dates(text, day_first, expected):
+    assert str(C.find_dates(text, REF, day_first)[-1][2]) == expected
+
+
+def test_european_deadline_forms():
+    assert C.extract_deadline("The deadline for submission is 30.11.2026, at midnight.", REF)["deadline"] == "2026-11-30"
+    assert C.extract_deadline("Closing date: 05/11/2026", REF, day_first=True)["deadline"] == "2026-11-05"
+
+
+def test_phd_places_are_not_faculty_jobs():
+    assert not C.is_faculty_position("Fully Funded Four-Year PhD Graduate Teaching Fellowships in Management")
+    assert not C.is_faculty_position("PhD Candidate in Marketing")
+    assert not C.is_faculty_position("Ph.D. Programme in Accounting, Economics, Finance, and Management")
+    assert C.is_faculty_position("Postdoctoral Position for PhD graduates in Finance")
+
+
+def test_european_titles():
+    assert C.is_faculty_position("Lectureships in Finance and Marketing")
+    assert C.is_faculty_position("Professeur de Stratégie en Executive Education")
+    assert C.detect_rank("Assistant Professorship (Tenure Track) in Entrepreneurship")[0] == "Assistant"
+    assert C.detect_rank("Associate Professorship / Assistant Professorship in Innovation")[0] == "Assistant/Associate"
+    assert C.detect_rank("Lecturers and Graduate Tutors in Marketing", "", "Asia-Pacific")[0] == "Lecturer"
+    # "all ranks" in the school's blurb does not override a title that names one rank
+    assert C.detect_rank("Assistant Professor in Marketing", "The school hires at all ranks.")[0] == "Assistant"
+    assert C.detect_rank("Faculty Positions", "The school hires at all ranks.")[0] == "Open rank"
+
+
+def test_non_business_subjects_at_business_schools():
+    desc = "The school is known for finance research and its finance, accounting and finance programmes."
+    assert C.detect_fields("Assistant Professor – Geopolitics", "", "Geopolitics", desc)[0] == "Other / General Business"
+    assert C.detect_fields("Assistant / Associate Professor of Law", "", "Law", desc)[0] == "Business Law & Ethics"
+    # a law faculty's name is not a business-law position
+    assert "Business Law & Ethics" not in C.detect_fields("Full Professor Banking & Finance",
+                                                          "Faculty of Law, Economics and Governance")[1]
+
+
+def test_more_business_schools_and_countries():
+    assert C.is_business_school("Grenoble Ecole de Management")
+    assert C.is_business_school("University of St.Gallen")
+    assert C.is_business_school("EDHEC Business School") and C.is_business_school("ESCP")
+    assert not C.is_business_school("Higher Education Commission (HEC), Pakistan")
+    assert C.business_relevance("Assistant Professor in Sales, Business Development, Negotiation")
+    assert C.detect_country("Cambodia / Phnom Penh") == "Cambodia"

@@ -73,7 +73,8 @@ FIELD_PATTERNS: dict[str, list[str]] = {
         r"\btechnology management\b",
     ],
     "International Business": [r"\binternational business\b", r"\bglobal business\b", r"\binternational management\b"],
-    "Business Law & Ethics": [r"\bbusiness law\b", r"\blegal studies\b", r"\bbusiness ethics\b", r"\blaw and ethics\b"],
+    "Business Law & Ethics": [r"\bbusiness law\b", r"\blegal studies\b", r"\bbusiness ethics\b", r"\blaw and ethics\b",
+                              r"\b(professor|lecturer)\w*,? (of|in) law\b", r"^\s*law\s*$"],
     "Hospitality & Tourism": [r"\bhospitality\b", r"\btourism\b", r"\bhotel\b"],
 }
 # Keywords as written on Chinese-language university sites (CJK characters are \w, so no \b).
@@ -110,6 +111,15 @@ def _field_hits(text: str, positions: dict[str, int] | None = None) -> dict[str,
     return hits
 
 
+# Subjects that business schools also hire in (EDHEC: geopolitics, humanities, ...). Such a posting gets
+# no field from its description, which talks about the school's finance or management programmes.
+_NON_BUSINESS_SUBJECT = re.compile(
+    r"humanit|politic|histor|philosoph|sociolog|anthropolog|linguist|literature|languages?\b|engineering|"
+    r"computer science|informatik|ethics of|theolog|religio|geograph|\bmusic|\barts?\b",
+    re.I,
+)
+
+
 def detect_fields(title: str = "", department: str = "", categories: str = "",
                   description: str = "", default: str = "") -> tuple[str, list[str]]:
     """Return (primary field, all fields) for a posting.
@@ -127,7 +137,7 @@ def detect_fields(title: str = "", department: str = "", categories: str = "",
             scores[f] = scores.get(f, 0) + weight * hits[f]
             if f not in order:
                 order.append(f)
-    if not scores and description:
+    if not scores and description and not _NON_BUSINESS_SUBJECT.search(f"{title} {categories}"):
         for f, n in _field_hits(description[:2500]).items():
             scores[f] = scores.get(f, 0) + min(n, 4)
             if f not in order:
@@ -153,7 +163,9 @@ _BSCHOOL_RE = re.compile(
     r"graduate school of (business|management)|(school|college|faculty|institute) of (economics and )?management|"
     r"economics and management|management and economics|faculty of (business|commerce)|school of commerce|"
     r"business and economics|economics and business|school of (accountancy|accounting|finance)|"
-    r"\b(wharton|insead|hec (paris|montr[ée]al|lausanne)|ceibs|ckgsb|kenan-flagler)\b",
+    r"management school|[ée]cole de management|business university|wirtschaftsuniversit|handelsh[öo]gskol|"
+    r"\b(wharton|insead|hec (paris|montr[ée]al|lausanne|li[èe]ge)|ceibs|ckgsb|kenan-flagler|escp|edhec|essec|i[ée]seg|neoma|skema|emlyon|kedge|"
+    r"audencia|bocconi|st\.? ?gallen)\b",
     re.I,
 )
 
@@ -174,7 +186,9 @@ _BIZ_SUBJECT = re.compile(
     r"accountancy|auditing|taxation|marketing|strateg(y|ic management)|organi[sz]ational behaviou?r|"
     r"organi[sz]ation(al)? (theory|studies)|human resource|operations management|supply chain|management science|"
     r"decision sciences?|information systems|business analytics|entrepreneur\w*|international business|real estate|"
-    r"insurance|risk management|business (law|ethics|economics|administration|studies)|managerial economics|"
+    r"insurance|risk management|business (law|ethics|economics|administration|studies|development)|"
+    r"managerial economics|sales|negotiation|(technology|innovation)( and innovation)? management|"
+    r"management (control|accounting)|enterprise systems|"
     r"(professor|lecturer|faculty|department|area|group) (of|in) management|management (department|area|group|unit))\b",
     re.I,
 )
@@ -202,7 +216,8 @@ def business_relevance(title: str = "", institution: str = "", department: str =
 
 
 _FACULTY_RE = re.compile(
-    r"professor|lecturer|faculty|instructor|post-?doc|postdoctoral|research fellow|reader\b|"
+    r"professor|lecturer|lectureship|faculty|instructor|post-?doc|postdoctoral|research fellow|reader\b|"
+    r"professeure?|professur|profesor|"
     r"tenure|chair\b|chair in|teaching fellow|assistant prof|associate prof|\bdean\b|academic position|"
     r"教授|讲师|教师|博士后|研究员|师资|教职|教研|教学科研|诚聘|英才|人才招聘",
     re.I,
@@ -216,9 +231,19 @@ _NON_FACULTY_RE = re.compile(
 )
 
 
+# Doctoral programmes and PhD student places ("Fully funded PhD teaching fellowships", "PhD candidate in ...").
+_PHD_PLACE_RE = re.compile(
+    r"\bph\.? ?d\.?\b[^.;]{0,40}\b(programs?|programmes?|candidates?|students?|studentships?|scholarships?|"
+    r"graduate teaching)\b|\bdoctoral (programs?|programmes?|students?|candidates?|scholarships?)\b",
+    re.I,
+)
+
+
 def is_faculty_position(title: str, context: str = "") -> bool:
-    """True for professor / lecturer / postdoc style roles, False for staff jobs."""
+    """True for professor / lecturer / postdoc style roles, False for staff jobs and PhD places."""
     title = title or ""
+    if _PHD_PLACE_RE.search(title) and not re.search(r"professor|lecturer|post-?doc", title, re.I):
+        return False
     if _FACULTY_RE.search(title):
         return True
     if _NON_FACULTY_RE.search(title):
@@ -238,17 +263,19 @@ def detect_rank(title: str, description: str = "", region: str = "") -> tuple[st
     t = (title or "").lower()
     d = (description or "")[:4000].lower()
 
-    asst = bool(re.search(r"assistant[\s/,-]*(professor|prof\.?)\b|\basst\.? prof", t))
-    assoc = bool(re.search(r"associate[\s/,-]*(professor|prof\.?)\b|\bassoc\.? prof", t))
+    asst = bool(re.search(r"assistant[\s/,-]*(professor(ship)?|prof\.?)\b|\basst\.? prof", t))
+    assoc = bool(re.search(r"associate[\s/,-]*(professor(ship)?|prof\.?)\b|\bassoc\.? prof", t))
     # "Assistant/Associate Professor", "Assistant or Associate Professor"
     if re.search(r"assistant\s*(/|,|or|and|&)\s*(\w+\s+)?associate", t):
         asst = assoc = True
     if re.search(r"associate\s*(/|,|or|and|&)\s*(full\s*)?professor", t):
         assoc = True
-    plain_prof = bool(re.search(r"\bprofessor\b(?! of (the )?practice)", t)) and not re.search(
+    plain_prof = bool(re.search(r"\bprofessor(ship)?\b(?! of (the )?practice)", t)) and not re.search(
         r"(clinical|teaching|instructional|visiting|adjunct|research|assistant|associate|practice)\s+professor", t)
     full = bool(re.search(r"\bfull\b(?![- ]?time)", t)) or (plain_prof and not asst and not assoc)
-    open_rank = bool(re.search(r"open[- ]rank|all ranks|any rank|rank open|rank is open|ranks? (are|is) open", t + " " + d[:600]))
+    _open = r"open[- ]rank|all ranks|any rank|rank open|rank is open|ranks? (are|is) open"
+    # The text's "all ranks" (often the school's general blurb) only counts when the title names no rank.
+    open_rank = bool(re.search(_open, t) or (not (asst or assoc or plain_prof) and re.search(_open, d[:600])))
 
     if re.search(r"\bdean\b|department (head|chair)|head of (department|school)|director of", t):
         rank = "Dean/Admin"
@@ -273,8 +300,8 @@ def detect_rank(title: str, description: str = "", region: str = "") -> tuple[st
         rank = "Associate"
     elif re.search(r"endowed|distinguished|chair\b|chaired", t):
         rank = "Chair/Endowed"
-    elif re.search(r"senior lecturer|associate lecturer|\blecturer\b|\breader\b", t):
-        if re.search(r"(?<!senior )(?<!associate )\blecturer\b", t) and "senior lecturer" in t:
+    elif re.search(r"senior lecturer|associate lecturer|\blecturers?\b|\breader\b", t):
+        if re.search(r"(?<!senior )(?<!associate )\blecturers?\b", t) and "senior lecturer" in t:
             rank = "Lecturer"  # "Lecturer/Senior Lecturer": open to entry level
         elif "senior lecturer" in t or "reader" in t:
             rank = "Associate" if region in _LECTURER_REGIONS else "Clinical/Teaching"
@@ -422,7 +449,10 @@ _DATE_PATTERNS = [
     re.compile(rf"\b{_MON}\s+{_DAY}(?:\s*,\s*|\s+){_YEAR}\b", re.I),
     re.compile(rf"\b{_DAY}\s+(?:of\s+)?{_MON}(?:\s*,\s*|\s+){_YEAR}\b", re.I),
     re.compile(rf"\b(?P<year>(?:19|20)\d{{2}})-(?P<month>\d{{1,2}})-(?P<day>\d{{1,2}})\b"),
-    re.compile(r"\b(?P<month>\d{1,2})/(?P<day>\d{1,2})/(?P<year>(?:20)?\d{2})\b"),
+    # 10/05/2026: month or day first? Decided in find_dates (see numeric_date_order).
+    re.compile(r"\b(?P<n1>\d{1,2})/(?P<n2>\d{1,2})/(?P<year>(?:20)?\d{2})\b"),
+    # 30.11.2026 (German, Swiss, Scandinavian, ...): always day first.
+    re.compile(r"\b(?P<day>\d{1,2})\.(?P<month>\d{1,2})\.(?P<year>(?:19|20)\d{2})\b"),
     re.compile(rf"\b{_MON}\s+{_DAY}\b(?!\s*,?\s*(?:19|20)\d{{2}})", re.I),
     re.compile(rf"\b{_DAY}\s+(?:of\s+)?{_MON}\b(?!\s*,?\s*(?:19|20)\d{{2}})", re.I),
 ]
@@ -463,15 +493,42 @@ def _mk_date(year: int | None, month: int, day: int, ref: date) -> date | None:
         return None
 
 
-def find_dates(text: str, ref: date) -> list[tuple[int, int, date]]:
-    """All dates in text as (start, end, date), non-overlapping, in text order."""
+_SLASH_DATE = re.compile(r"\b(\d{1,2})/(\d{1,2})/(?:20)?\d{2}\b")
+
+
+def numeric_date_order(*texts: str) -> bool | None:
+    """True if slash dates in these texts are day/month/year (as outside North America),
+    False if month/day/year, None if every one is ambiguous (both numbers 12 or less)."""
+    for t in texts:
+        for a, b in _SLASH_DATE.findall(t or ""):
+            if int(a) > 12 >= int(b):
+                return True
+            if int(b) > 12 >= int(a):
+                return False
+    return None
+
+
+def find_dates(text: str, ref: date, day_first: bool | None = None) -> list[tuple[int, int, date]]:
+    """All dates in text as (start, end, date), non-overlapping, in text order.
+
+    day_first decides ambiguous slash dates such as 05/11/2026; when None, the other slash
+    dates in the text decide, and month/day (US style) is the fallback.
+    """
     found: list[tuple[int, int, date]] = []
     taken: list[tuple[int, int]] = []
+    if day_first is None:
+        day_first = bool(numeric_date_order(text))
     for pat in _DATE_PATTERNS:
         for m in pat.finditer(text):
             if any(m.start() < e and s < m.end() for s, e in taken):
                 continue
             g = m.groupdict()
+            if g.get("n1"):
+                a, b = int(g["n1"]), int(g["n2"])
+                if a > 12 or (day_first and b <= 12):
+                    g["day"], g["month"] = a, b
+                else:
+                    g["month"], g["day"] = a, b
             if g.get("mon"):
                 month = _MONTHS.get(g["mon"].lower().rstrip("."), 0)
                 if not month and g["mon"].lower().startswith("sept"):
@@ -506,7 +563,7 @@ def fmt_date(d: date) -> str:
     return f"{d:%b} {d.day}, {d.year}"
 
 
-def parse_date_string(value: str, ref: date | None = None) -> date | None:
+def parse_date_string(value: str, ref: date | None = None, day_first: bool | None = None) -> date | None:
     """Parse one date from a short string such as a source's 'Deadline' field."""
     if not value:
         return None
@@ -515,11 +572,11 @@ def parse_date_string(value: str, ref: date | None = None) -> date | None:
     m = re.match(r"^(\d{4})-(\d{2})-(\d{2})", v)
     if m:
         return _mk_date(int(m.group(1)), int(m.group(2)), int(m.group(3)), ref)
-    ds = find_dates(v, ref)
+    ds = find_dates(v, ref, day_first)
     return ds[0][2] if ds else None
 
 
-def extract_deadline(text: str, ref: date | None = None) -> dict:
+def extract_deadline(text: str, ref: date | None = None, day_first: bool | None = None) -> dict:
     """Find application deadline, review start and 'open until filled' language.
 
     Returns dict(deadline, review_start, open_until_filled, note) with ISO dates
@@ -531,7 +588,7 @@ def extract_deadline(text: str, ref: date | None = None) -> dict:
     text = re.sub(r"\s+", " ", text or "")
     deadlines: list[date] = []
     reviews: list[date] = []
-    for s, e, d in find_dates(text, ref):
+    for s, e, d in find_dates(text, ref, day_first):
         left, right = _sentence_window(text, s, e)
         if _REVIEW_CUE.search(left):
             reviews.append(d)
@@ -796,6 +853,10 @@ COUNTRY_REGION = {
     "Indonesia": "Asia-Pacific", "Vietnam": "Asia-Pacific", "Philippines": "Asia-Pacific", "Pakistan": "Asia-Pacific",
     "Kazakhstan": "Asia-Pacific", "Uzbekistan": "Asia-Pacific", "Bangladesh": "Asia-Pacific",
     "Sri Lanka": "Asia-Pacific", "Mongolia": "Asia-Pacific", "Macao": "Greater China",
+    "Cambodia": "Asia-Pacific", "Laos": "Asia-Pacific", "Myanmar": "Asia-Pacific", "Nepal": "Asia-Pacific",
+    "Brunei": "Asia-Pacific", "Kyrgyzstan": "Asia-Pacific", "Armenia": "Europe", "Azerbaijan": "Europe",
+    "Jordan": "Middle East & Africa", "Tunisia": "Middle East & Africa", "Algeria": "Middle East & Africa",
+    "Rwanda": "Middle East & Africa", "Mauritius": "Middle East & Africa", "Panama": "Latin America",
     "Germany": "Europe", "France": "Europe", "Netherlands": "Europe", "Switzerland": "Europe", "Italy": "Europe",
     "Spain": "Europe", "Portugal": "Europe", "Belgium": "Europe", "Austria": "Europe", "Sweden": "Europe",
     "Norway": "Europe", "Denmark": "Europe", "Finland": "Europe", "Iceland": "Europe", "Luxembourg": "Europe",
