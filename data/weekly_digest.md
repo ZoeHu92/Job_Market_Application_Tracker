@@ -1,110 +1,165 @@
 # Academic job market digest — October 29, 2026
 
-**76 new postings · 127 deadlines in the next 14 days · 0 closed this week**
+**127 new postings · 126 deadlines in the next 14 days · 4 closed this week**
 
-## New this week (76)
+## New this week (127)
 
-### Accounting (10)
+### Accounting (20)
 - **Stockholm School of Economics** — [Tenure Track Position at the Department of Accounting](https://akadeus.com/announcement/9896) (Assistant/Associate · deadline 2026-11-14 · Akadeus)
 - **ESCP Business School** — [Assistant or Associate Professor Position in Management Accounting and Control](https://akadeus.com/announcement/9925) (Assistant/Associate · deadline 2026-11-15 · Akadeus)
+- **UNIVERSITY OF SOUTHAMPTON** — [Adjunct Faculty in Accounting](https://www.timeshighereducation.com/unijobs/listing/417064/adjunct-faculty-in-accounting/?LinkSource=PremiumListing) (Clinical/Teaching · deadline 2026-11-21 · Competitive Salary · THE)
 - **Bocconi University** — [10 Full / Associate Professor Positions at SDA Bocconi School of Management](https://akadeus.com/announcement/9932) (Associate/Full · deadline 2026-11-30 · Akadeus)
-- **EDHEC Business School** — [Associate / Full Professor of Accounting – Financial Accounting and Auditing](https://akadeus.com/announcement/9829) (Associate/Full · deadline 2027-02-28 · Akadeus)
 - **EDHEC Business School** — [Associate / Full Professor of Accounting – Managerial Accounting](https://akadeus.com/announcement/9828) (Associate/Full · deadline 2027-02-28 · Akadeus)
+- **EDHEC Business School** — [Associate / Full Professor of Accounting – Financial Accounting and Auditing](https://akadeus.com/announcement/9829) (Associate/Full · deadline 2027-02-28 · Akadeus)
+- **Beijing Normal-Hong Kong Baptist University (BNBU)** — [Professor / Associate Professor / Assistant Professor in Accounting](https://www.timeshighereducation.com/unijobs/listing/417079/professor-associate-professor-assistant-professor-in-accounting/?LinkSource=PremiumListing) (Assistant/Associate · deadline 2027-10-29 · THE)
+- **Alamo Colleges** — [Faculty Instructor (Accounting) NLC - req14339](https://www.higheredjobs.com/details.cfm?JobCode=179600643) (Clinical/Teaching · HigherEdJobs)
+- **College of DuPage** — [Adjunct Faculty, Accountancy (Governmental Accounting) - SP27](https://www.higheredjobs.com/details.cfm?JobCode=179601720) (Clinical/Teaching · HigherEdJobs)
 - **EBS Universität für Wirtschaft und Recht** — [Professor in Accounting](https://akadeus.com/announcement/9938) (Full · Akadeus)
+- **Georgia Gwinnett College** — [Accounting: Assistant Professor - Fall 2027](https://www.higheredjobs.com/details.cfm?JobCode=179601062) (Assistant · HigherEdJobs)
 - **HEC Montréal** — [Tenure Track Position - Accounting / Professeure, professeur - Sciences comptables](https://akadeus.com/announcement/9934) (Unspecified · Akadeus)
 - **NEOMA Business School** — [Assistant / Associate / Full Professor in Financial Accounting and / or Management Control](https://akadeus.com/announcement/9807) (Open rank · Akadeus)
 - **Toulouse School of Management (TSM) - Université Toulouse 1 Capitole** — [Junior Professor Chair in Accounting and Climate Change](https://akadeus.com/announcement/9956) (Chair/Endowed · Akadeus)
+- **University of Colorado Denver** — [Lecturer in Accounting](https://www.higheredjobs.com/details.cfm?JobCode=179601440) (Clinical/Teaching · HigherEdJobs)
+- **University of North Florida** — [Instructor of Accounting & Taxation](https://www.higheredjobs.com/details.cfm?JobCode=179593412) (Clinical/Teaching · HigherEdJobs)
+- **WENZHOU - KEAN UNIVERSITY** — [2027 Accounting Non-Tenure-Track Lecturers](https://careers.insidehighered.com/job/3567830/2027-accounting-non-tenure-track-lecturers/?TrackID=11&utm_source=rss&utm_medium=feed&utm_campaign=general) (Clinical/Teaching · InsideHigherEd)
+- **WENZHOU - KEAN UNIVERSITY** — [2027 Accounting Faculty Positions, Tenure-Track Assistant/Associate Professors](https://careers.insidehighered.com/job/3567793/2027-accounting-faculty-positions-tenure-track-assistant-associate-professors/?TrackID=11&utm_source=rss&utm_medium=feed&utm_campaign=general) (Assistant/Associate · InsideHigherEd)
+- **Westchester Community College** — [Adjunct Faculty/Accounting](https://careers.insidehighered.com/job/2636642/adjunct-faculty-accounting/?TrackID=11&utm_source=rss&utm_medium=feed&utm_campaign=general) (Clinical/Teaching · InsideHigherEd)
 - **Xi'an Jiaotong-Liverpool University** — [Faculty Position in Accounting (Full Rank)](https://akadeus.com/announcement/9881) (Full · Competitive salary in the market · Akadeus)
 
-### Management & Strategy (10)
-- **UCLouvain** — [Academic Position in Industrial Economics and Strategic Management](https://akadeus.com/announcement/9919) (Unspecified · deadline 2026-11-05 · Akadeus)
-- **The Geneva School of Economics and Management (GSEM) of the University of Geneva** — [Associate or Full Professor in Management](https://akadeus.com/announcement/9913) (Associate/Full · deadline 2026-11-30 · Akadeus)
-- **Grenoble Ecole de Management** — [Assistant or Associate Professor in Strategy or Business Analytics with a strong expertise on Energy Transition](https://akadeus.com/announcement/9947) (Assistant/Associate · deadline 2027-01-30 · Akadeus)
-- **Grenoble Ecole de Management** — [Assistant or Associate Professor in Strategy, Innovation and Artificial Intelligence](https://akadeus.com/announcement/9940) (Assistant/Associate · deadline 2027-01-30 · Akadeus)
-- **Grenoble Ecole de Management** — [Assistant / Associate Professor in Management Control](https://akadeus.com/announcement/9908) (Assistant/Associate · deadline 2027-01-31 · Akadeus)
-- **EDHEC Business School** — [Associate / Full Professor in Strategy](https://akadeus.com/announcement/9836) (Associate/Full · deadline 2027-02-28 · Akadeus)
-- **EMLV - Ecole de Management Léonard de Vinci** — [Assistant / Associate Professor in Management](https://akadeus.com/announcement/9512) (Assistant/Associate · Akadeus)
-- **Headway People / EDHEC Business School** — [Professeur de Stratégie en Executive Education](https://akadeus.com/announcement/9877) (Unspecified · Akadeus)
-- **University of St.Gallen** — [Full Professorship / Associate Professorship in Data Management and Enterprise Systems](https://akadeus.com/announcement/9927) (Associate/Full · Akadeus)
-- **Wenzhou-Kean University** — [Tenure-Track Assistant / Associate Professor in Management](https://akadeus.com/announcement/9957) (Assistant/Associate · Akadeus)
-
-### Marketing (9)
+### Marketing (20)
 - **Stockholm School of Economics** — [Assistant Professor, Tenure Track, in Marketing, especially Retailing](https://akadeus.com/announcement/9889) (Assistant · deadline 2026-11-01 · Akadeus)
 - **Stockholm School of Economics** — [Assistant Professor, Tenure Track, in Strategic Marketing](https://akadeus.com/announcement/9890) (Assistant · deadline 2026-11-01 · Akadeus)
 - **UCLouvain** — [Full-time Academic Position in Digital Marketing](https://akadeus.com/announcement/9917) (Unspecified · deadline 2026-11-05 · Akadeus)
 - **ESCP Business School** — [Assistant or Associate Professor in Marketing](https://akadeus.com/announcement/9931) (Assistant/Associate · deadline 2026-11-15 · Akadeus)
+- **LEUPHANA UNIVERSITY OF LUENEBURG** — [Full Professorship, Advertising and Consumer Psychology & Marketing“ (W2/W3)](https://www.timeshighereducation.com/unijobs/listing/417093/full-professorship-advertising-and-consumer-psychology-and-marketing-w2-w3-/) (Full · deadline 2026-11-28 · W2/W3 (up to 74.000 UK Pounds per annum) · THE)
+- **Cornell University** — [Professor of Practice](https://academicjobsonline.org/ajo/Cornell/College%20of%20Business/33279?rss) (Clinical/Teaching · deadline 2026-12-15 · $120,000 - $280,000 · AJO)
+- **Texas A&M University - Corpus Christi** — [Assistant/Associate Professor of Marketing](https://jobs.chronicle.com/job/38057529/assistant-associate-professor-of-marketing/?TrackID=10&utm_source=rss&utm_medium=feed&utm_campaign=general) (Assistant/Associate · deadline 2026-12-31 · Chronicle)
 - **EDHEC Business School** — [Associate or Full Professor – Retail and Quantitative Marketing](https://akadeus.com/announcement/9831) (Associate/Full · deadline 2027-02-28 · Akadeus)
+- **Beijing Normal-Hong Kong Baptist University (BNBU)** — [Faculty Positions in Marketing Management, Human Resources Management, or Business Studies](https://www.timeshighereducation.com/unijobs/listing/417082/faculty-positions-in-marketing-management-human-resources-management-or-business-studies/?LinkSource=PremiumListing) (Assistant/Associate · deadline 2027-10-29 · Commencing salaries will be commensurate with qualifications and relevant experience. · THE)
 - **De Montfort University, Cambodia** — [Lecturers and Graduate Tutors in Marketing and Business](https://akadeus.com/announcement/9953) (Lecturer · Akadeus)
 - **EDC Paris Business School** — [Professor in Luxury Management, Marketing or Economy](https://akadeus.com/announcement/9937) (Full · Akadeus)
 - **EMLV - Ecole de Management Léonard de Vinci** — [Assistant / Associate Professor in Marketing](https://akadeus.com/announcement/9513) (Assistant/Associate · Akadeus)
+- **Georgia Gwinnett College** — [Assistant Professor: Marketing - Fall 2027](https://www.higheredjobs.com/details.cfm?JobCode=179601064) (Assistant · HigherEdJobs)
 - **Institut Lyfe** — [Associate Professor in Marketing and Digital Technology with broad expertise in Marketing / Digital Technology / AI](https://akadeus.com/announcement/9924) (Associate · Akadeus)
+- **Leuphana University of Lüneburg** — [Full Professorship „Advertising and Consumer Psychology & Marketing“ (W2/W3)](https://jobs.chronicle.com/job/38057545/full-professorship-advertising-and-consumer-psychology-and-marketing-w2-w3-/?TrackID=10&utm_source=rss&utm_medium=feed&utm_campaign=general) (Full · W2/W3 (up to 98.000 USD per annum) · Chronicle)
+- **Texas A&M University Corpus Christi** — [Assistant/Associate Professor of Marketing](https://www.higheredjobs.com/details.cfm?JobCode=179601898) (Assistant/Associate · HigherEdJobs)
+- **Tusculum University** — [Assistant Professor of Marketing and/or Management](https://www.higheredjobs.com/details.cfm?JobCode=179601251) (Assistant · HigherEdJobs)
+- **University of Central Oklahoma** — [Marketing - Full-Time, Non-Tenure Track Assistant Professor](https://www.higheredjobs.com/details.cfm?JobCode=179601276) (Clinical/Teaching · HigherEdJobs)
+- **University of Central Oklahoma** — [Marketing - Full-Time, Non-Tenure Track Assistant Professor](https://www.higheredjobs.com/details.cfm?JobCode=179601275) (Clinical/Teaching · HigherEdJobs)
+- **University of Colorado Denver** — [Lecturer in Marketing](https://www.higheredjobs.com/details.cfm?JobCode=179601450) (Clinical/Teaching · HigherEdJobs)
 
-### Finance (8)
+### Management & Strategy (18)
+- **UCLouvain** — [Academic Position in Industrial Economics and Strategic Management](https://akadeus.com/announcement/9919) (Unspecified · deadline 2026-11-05 · Akadeus)
+- **UNIVERSITY OF SOUTHAMPTON** — [Adjunct Faculty in Management](https://www.timeshighereducation.com/unijobs/listing/417066/adjunct-faculty-in-management/?LinkSource=PremiumListing) (Clinical/Teaching · deadline 2026-11-21 · Competitive Salary · THE)
+- **The Geneva School of Economics and Management (GSEM) of the University of Geneva** — [Associate or Full Professor in Management](https://akadeus.com/announcement/9913) (Associate/Full · deadline 2026-11-30 · Akadeus)
+- **Grenoble Ecole de Management** — [Assistant or Associate Professor in Strategy, Innovation and Artificial Intelligence](https://akadeus.com/announcement/9940) (Assistant/Associate · deadline 2027-01-30 · Akadeus)
+- **Grenoble Ecole de Management** — [Assistant or Associate Professor in Strategy or Business Analytics with a strong expertise on Energy Transition](https://akadeus.com/announcement/9947) (Assistant/Associate · deadline 2027-01-30 · Akadeus)
+- **Grenoble Ecole de Management** — [Assistant / Associate Professor in Management Control](https://akadeus.com/announcement/9908) (Assistant/Associate · deadline 2027-01-31 · Akadeus)
+- **EDHEC Business School** — [Associate / Full Professor in Strategy](https://akadeus.com/announcement/9836) (Associate/Full · deadline 2027-02-28 · Akadeus)
+- **Athens State University** — [Open Rank Faculty - Technology Management with emphasis in Aerospace Project and/or Operations Mgt](https://jobs.chronicle.com/job/38052661/open-rank-faculty-technology-management-with-emphasis-in-aerospace-project-and-or-operations-mgt/?TrackID=10&utm_source=rss&utm_medium=feed&utm_campaign=general) (Open rank · $68,000 – $114,000 · Chronicle)
+- **EMLV - Ecole de Management Léonard de Vinci** — [Assistant / Associate Professor in Management](https://akadeus.com/announcement/9512) (Assistant/Associate · Akadeus)
+- **Hampton University** — [Assistant Professor – Department of Management](https://jobs.chronicle.com/job/38057599/assistant-professor-department-of-management/?TrackID=10&utm_source=rss&utm_medium=feed&utm_campaign=general) (Assistant · $80,000-$90,000 · Chronicle)
+- **Headway People / EDHEC Business School** — [Professeur de Stratégie en Executive Education](https://akadeus.com/announcement/9877) (Unspecified · Akadeus)
+- **Seton Hall University** — [Adjunct Professor - Information Technology Management](https://jobs.chronicle.com/job/38053199/adjunct-professor-information-technology-management/?TrackID=10&utm_source=rss&utm_medium=feed&utm_campaign=general) (Clinical/Teaching · Chronicle)
+- **South Dakota School of Mines and Technology** — [Adjunct-Instructor, Lecturer, or Senior Lecturer of Mining Engineering and Management (BMIT Sales)](https://www.higheredjobs.com/details.cfm?JobCode=179594428) (Clinical/Teaching · HigherEdJobs)
+- **Southern Utah University** — [Assistant Professor of Management, Tenure-Track](https://www.higheredjobs.com/details.cfm?JobCode=179601887) (Assistant · HigherEdJobs)
+- **Texas Tech University** — [Asst/Assoc/Full Professor - Area of Management](https://www.higheredjobs.com/details.cfm?JobCode=179601809) (Full · HigherEdJobs)
+- **University of Colorado Denver** — [Lecturer in Management](https://www.higheredjobs.com/details.cfm?JobCode=179601442) (Clinical/Teaching · HigherEdJobs)
+- **University of St.Gallen** — [Full Professorship / Associate Professorship in Data Management and Enterprise Systems](https://akadeus.com/announcement/9927) (Associate/Full · Akadeus)
+- **Wenzhou-Kean University** — [Tenure-Track Assistant / Associate Professor in Management](https://akadeus.com/announcement/9957) (Assistant/Associate · Akadeus)
+
+### Finance (14)
+- **Indiana University Bloomington** — [Advanced Assistant/Associate/Full Professor positions, Kelley School of Business (Finance)](https://jobs.chronicle.com/job/38057580/advanced-assistant-associate-full-professor-positions-kelley-school-of-business-finance-/?TrackID=10&utm_source=rss&utm_medium=feed&utm_campaign=general) (Open rank · deadline 2026-09-15 · Competitive Salary · Chronicle)
 - **American University of Beirut** — [Full Professor, Associate Professor, Assistant Professor in Finance and Accounting](https://akadeus.com/announcement/9899) (Open rank · deadline 2026-11-15 · Akadeus)
-- **EDHEC Business School** — [Assistant / Associate / Full Professor in Finance](https://akadeus.com/announcement/9833) (Open rank · deadline 2027-02-28 · Akadeus)
+- **The School of Kinesiology at the University of Michigan (Ann Arbor)** — [Tenure-line Faculty Position in Sport Finance (Open Rank)](https://jobs.chronicle.com/job/38057493/tenure-line-faculty-position-in-sport-finance-open-rank-/?TrackID=10&utm_source=rss&utm_medium=feed&utm_campaign=general) (Open rank · deadline 2026-11-20 · Competitive Salary · Chronicle)
+- **UNIVERSITY OF SOUTHAMPTON** — [Adjunct Faculty in Finance](https://www.timeshighereducation.com/unijobs/listing/417067/adjunct-faculty-in-finance/?LinkSource=PremiumListing) (Clinical/Teaching · deadline 2026-11-21 · Competitive Salary · THE)
 - **EDHEC Business School** — [Associate / Full Professor in Finance, Data Science, Economics, Econometrics, or Related Fields](https://akadeus.com/announcement/9832) (Associate/Full · deadline 2027-02-28 · Akadeus)
+- **EDHEC Business School** — [Assistant / Associate / Full Professor in Finance](https://akadeus.com/announcement/9833) (Open rank · deadline 2027-02-28 · Akadeus)
+- **Beijing Normal-Hong Kong Baptist University (BNBU)** — [Professor / Associate Professor / Assistant Professor in Finance](https://www.timeshighereducation.com/unijobs/listing/417080/professor-associate-professor-assistant-professor-in-finance/?LinkSource=PremiumListing) (Assistant/Associate · deadline 2027-10-29 · Commencing salaries will be commensurate with qualifications and relevant experience. · THE)
 - **EMLV - Ecole de Management Léonard de Vinci** — [Assistant / Associate Professor in Finance](https://akadeus.com/announcement/9511) (Assistant/Associate · Akadeus)
+- **Lingnan University** — [Associate Professor of Teaching / Assistant Professor of Teaching, Department of Finance](https://careers.insidehighered.com/job/3567718/associate-professor-of-teaching-assistant-professor-of-teaching-department-of-finance/?TrackID=11&utm_source=rss&utm_medium=feed&utm_campaign=general) (Assistant/Associate · InsideHigherEd)
 - **NEOMA Business School** — [Assistant / Associate / Full Professor Positions in Finance](https://akadeus.com/announcement/9791) (Open rank · Akadeus)
 - **Rabat Business School** — [Assistant / Associate / Full Professors in Marketing, Strategy, Human Resource Management, Supply Chain Management, Finance, Corporate Finance, Accounting, Economics, Entrepreneurship, Innovation, Information Systems, Business Analytics](https://akadeus.com/announcement/9298) (Open rank · Akadeus)
 - **The American University in Cairo (AUC)** — [Assistant, Associate or Full Professor in Finance (Tenure Track)](https://akadeus.com/announcement/9915) (Open rank · Akadeus)
+- **University of Colorado Denver** — [Lecturer in Finance](https://www.higheredjobs.com/details.cfm?JobCode=179601452) (Clinical/Teaching · HigherEdJobs)
 - **Westminster International University in Tashkent** — [Lectureships in Finance, Management and Marketing, Economics, Law, Computing](https://akadeus.com/announcement/9652) (Unspecified · Akadeus)
 
-### Organizational Behavior & HR (8)
+### Business Analytics & Statistics (9)
+- **ESCP Business School** — [Assistant / Associate Professor of Business Analytics and Artificial Intelligence](https://akadeus.com/announcement/9952) (Assistant/Associate · deadline 2026-12-01 · Akadeus)
+- **ESCP Business School** — [Assistant / Associate Professor of Business Analytics](https://akadeus.com/announcement/9954) (Assistant/Associate · deadline 2026-12-01 · €54,000 to €67,000 · Akadeus)
+- **SKEMA Business School** — [Assistant / Associate / Full Professor in Artificial Intelligence for Business](https://akadeus.com/announcement/9882) (Open rank · deadline 2026-12-31 · Akadeus)
+- **SKEMA Business School** — [Assistant / Associate / Full Professor in Artificial Intelligence for Business](https://akadeus.com/announcement/9883) (Open rank · deadline 2026-12-31 · Akadeus)
+- **SKEMA Business School** — [Assistant Professor Position in Artificial Intelligence for Business](https://akadeus.com/announcement/9884) (Assistant · deadline 2026-12-31 · Akadeus)
+- **EDHEC Business School** — [Assistant / Associate / Full Professor in Data Science, Machine Learning, Econometrics, or Quantitative Methods](https://akadeus.com/announcement/9835) (Open rank · deadline 2027-02-28 · Akadeus)
+- **Beijing Normal-Hong Kong Baptist University (BNBU)** — [Professor / Associate Professor / Assistant Professor in Business Analytics](https://www.timeshighereducation.com/unijobs/listing/417081/professor-associate-professor-assistant-professor-in-business-analytics/) (Assistant/Associate · deadline 2027-10-29 · THE)
+- **Indian Institute of Management Ahmedabad** — [Assistant, Associate and Full Professor in Artificial Intelligence](https://akadeus.com/announcement/9869) (Open rank · Akadeus)
+- **University of Colorado Denver** — [Lecturer in Business Analytics](https://www.higheredjobs.com/details.cfm?JobCode=179601444) (Clinical/Teaching · HigherEdJobs)
+
+### Organizational Behavior & HR (9)
 - **American University of Beirut** — [Full Professor, Associate Professor, Assistant Professor in Organizational Behavior and HRM, Business and Society, Entrepreneurship, Marketing](https://akadeus.com/announcement/9901) (Open rank · deadline 2026-11-15 · Akadeus)
 - **SolBridge International School of Business** — [Assistant Professor Positions in Analytics & AI for Business, Technology, Organizational Behavior & Human Resources, Marketing, Management & Entrepreneurship, Finance, Accounting](https://akadeus.com/announcement/9909) (Assistant · deadline 2026-11-20 · Akadeus)
 - **SolBridge International School of Business** — [Visiting Professor Positions in Analytics & AI for Business, Technology, Organizational Behavior & Human Resources, Marketing, Management & Entrepreneurship, Finance, Accounting](https://akadeus.com/announcement/9910) (Visiting · deadline 2026-11-20 · Akadeus)
 - **Grenoble Ecole de Management** — [Assistant / Associate Professor in Sales, Business Development, Negotiation](https://akadeus.com/announcement/9916) (Assistant/Associate · deadline 2026-11-30 · Akadeus)
 - **Fundação Dom Cabral (FDC)** — [Professor and Researcher in Leadership and Organizational Behavior](https://akadeus.com/announcement/9942) (Full · deadline 2026-12-15 · Akadeus)
-- **EDHEC Business School** — [Associate or Full Professor – Organizational Behavior, with a specialization in Negotiation](https://akadeus.com/announcement/9842) (Associate/Full · deadline 2027-02-28 · Akadeus)
-- **EDHEC Business School** — [Assistant, Associate, or Full Professor – Organizational Behavior, with a specialization in Intercultural Communication](https://akadeus.com/announcement/9841) (Open rank · deadline 2027-02-28 · Akadeus)
 - **EDHEC Business School** — [Assistant, Associate, or Full Professor – Human Resources Management](https://akadeus.com/announcement/9838) (Open rank · deadline 2027-02-28 · Akadeus)
+- **EDHEC Business School** — [Assistant, Associate, or Full Professor – Organizational Behavior, with a specialization in Intercultural Communication](https://akadeus.com/announcement/9841) (Open rank · deadline 2027-02-28 · Akadeus)
+- **EDHEC Business School** — [Associate or Full Professor – Organizational Behavior, with a specialization in Negotiation](https://akadeus.com/announcement/9842) (Associate/Full · deadline 2027-02-28 · Akadeus)
+- **Texas A&M University - Central Texas** — [Assistant Professor of Management/Leadership](https://www.higheredjobs.com/details.cfm?JobCode=179579315) (Assistant · HigherEdJobs)
 
-### Business Analytics & Statistics (7)
-- **ESCP Business School** — [Assistant / Associate Professor of Business Analytics](https://akadeus.com/announcement/9954) (Assistant/Associate · deadline 2026-12-01 · €54,000 to €67,000 · Akadeus)
-- **ESCP Business School** — [Assistant / Associate Professor of Business Analytics and Artificial Intelligence](https://akadeus.com/announcement/9952) (Assistant/Associate · deadline 2026-12-01 · Akadeus)
-- **SKEMA Business School** — [Assistant Professor Position in Artificial Intelligence for Business](https://akadeus.com/announcement/9884) (Assistant · deadline 2026-12-31 · Akadeus)
-- **SKEMA Business School** — [Assistant / Associate / Full Professor in Artificial Intelligence for Business](https://akadeus.com/announcement/9883) (Open rank · deadline 2026-12-31 · Akadeus)
-- **SKEMA Business School** — [Assistant / Associate / Full Professor in Artificial Intelligence for Business](https://akadeus.com/announcement/9882) (Open rank · deadline 2026-12-31 · Akadeus)
-- **EDHEC Business School** — [Assistant / Associate / Full Professor in Data Science, Machine Learning, Econometrics, or Quantitative Methods](https://akadeus.com/announcement/9835) (Open rank · deadline 2027-02-28 · Akadeus)
-- **Indian Institute of Management Ahmedabad** — [Assistant, Associate and Full Professor in Artificial Intelligence](https://akadeus.com/announcement/9869) (Open rank · Akadeus)
-
-### Operations & Supply Chain (7)
+### Operations & Supply Chain (8)
 - **Nova School of Business and Economics** — [Assistant, Associate, Full Professor in Operations Management](https://akadeus.com/announcement/9912) (Open rank · deadline 2026-10-01 · Akadeus)
 - **NEOMA Business School** — [Assistant / Associate / Full Professor in Operations Management / Supply Chain Management](https://akadeus.com/announcement/9871) (Open rank · deadline 2026-10-15 · Akadeus)
 - **American University of Beirut** — [Assistant Professor in Business Analytics, Operations Management](https://akadeus.com/announcement/9900) (Assistant · deadline 2026-11-15 · Akadeus)
 - **ESCP Business School** — [Assistant / Associate Professor of Operations and Supply Chain Management](https://akadeus.com/announcement/9951) (Assistant/Associate · deadline 2026-12-01 · Akadeus)
 - **Grenoble Ecole de Management** — [Assistant or Associate Professor in Supply Chain Management](https://akadeus.com/announcement/9939) (Assistant/Associate · deadline 2027-01-30 · Akadeus)
+- **Georgia Gwinnett College** — [Assistant Professor: Supply Chain Management - Fall 2027](https://www.higheredjobs.com/details.cfm?JobCode=179601066) (Assistant · HigherEdJobs)
 - **HEC Montréal** — [Assistant, Associate, or Full Professor in International Business, Applied Economics, Finance, Logistic and Operations Management, Human Resources Management, Project Management, Sport Management, and Information Technology](https://akadeus.com/announcement/9921) (Open rank · Akadeus)
 - **Higher Colleges of Technology** — [Faculty in Business (Accounting, Business Analytics, Finance, HR Management, Marketing, Logistics and Supply Chain Management, Real Estate Management, Project Management, Tourism Management)](https://akadeus.com/announcement/8699) (Unspecified · Akadeus)
 
-### Entrepreneurship & Innovation (6)
+### Other / General Business (8)
+- **Ecole Polytechnique Fédérale de Lausanne (EPFL)** — [Faculty Position in Ethics of Technology](https://akadeus.com/announcement/9923) (Unspecified · deadline 2026-11-15 · Akadeus)
+- **EDHEC Business School** — [Assistant, Associate, or Full Professor – Geopolitics](https://akadeus.com/announcement/9839) (Open rank · deadline 2027-02-28 · Akadeus)
+- **EDHEC Business School** — [Assistant, Associate, or Full Professor – Political Sciences](https://akadeus.com/announcement/9840) (Open rank · deadline 2027-02-28 · Akadeus)
+- **EDHEC Business School** — [Assistant, Associate, or Full Professor – Humanities](https://akadeus.com/announcement/9844) (Open rank · deadline 2027-02-28 · Akadeus)
+- **Concordia University** — [Dean, John Molson School of Business](https://akadeus.com/announcement/9911) (Dean/Admin · Akadeus)
+- **Hampton University** — [Assistant Professor - Department of Management](https://www.higheredjobs.com/details.cfm?JobCode=179601280) (Assistant · HigherEdJobs)
+- **Westchester Community College** — [Adjunct Faculty/Cybersecurity](https://careers.insidehighered.com/job/1857556/adjunct-faculty-cybersecurity/?TrackID=11&utm_source=rss&utm_medium=feed&utm_campaign=general) (Clinical/Teaching · InsideHigherEd)
+- **Westchester Community College** — [Adjunct Faculty/Interactive Technologies - Game Design](https://careers.insidehighered.com/job/2480440/adjunct-faculty-interactive-technologies-game-design/?TrackID=11&utm_source=rss&utm_medium=feed&utm_campaign=general) (Clinical/Teaching · InsideHigherEd)
+
+### Entrepreneurship & Innovation (7)
 - **UCLouvain** — [Full-time Academic Position in Sustainable Entrepreneurship](https://akadeus.com/announcement/9918) (Unspecified · deadline 2026-11-05 · Akadeus)
 - **ESCP Business School** — [Assistant / Associate Professor of Technology Management (Digital Products and AI)](https://akadeus.com/announcement/9955) (Assistant/Associate · deadline 2026-12-01 · £59,141–£64,426 · Akadeus)
 - **EDHEC Business School** — [Assistant / Associate / Full Professor in Entrepreneurship](https://akadeus.com/announcement/9837) (Open rank · deadline 2027-02-28 · Akadeus)
 - **ISM University of Management and Economics** — [Professor / Associate Professor in Entrepreneurship and Management](https://akadeus.com/announcement/9868) (Associate · Akadeus)
+- **University of Colorado Denver** — [Lecturer in Entrepreneurship](https://www.higheredjobs.com/details.cfm?JobCode=179601449) (Clinical/Teaching · HigherEdJobs)
 - **University of St.Gallen** — [Associate Professorship / Assistant Professorship in Technology and Innovation Management](https://akadeus.com/announcement/9926) (Assistant/Associate · Akadeus)
 - **University of St.Gallen** — [Assistant Professorship (Tenure Track) in Entrepreneurship](https://akadeus.com/announcement/9928) (Assistant · Akadeus)
 
-### Other / General Business (5)
-- **Ecole Polytechnique Fédérale de Lausanne (EPFL)** — [Faculty Position in Ethics of Technology](https://akadeus.com/announcement/9923) (Unspecified · deadline 2026-11-15 · Akadeus)
-- **EDHEC Business School** — [Assistant, Associate, or Full Professor – Humanities](https://akadeus.com/announcement/9844) (Open rank · deadline 2027-02-28 · Akadeus)
-- **EDHEC Business School** — [Assistant, Associate, or Full Professor – Political Sciences](https://akadeus.com/announcement/9840) (Open rank · deadline 2027-02-28 · Akadeus)
-- **EDHEC Business School** — [Assistant, Associate, or Full Professor – Geopolitics](https://akadeus.com/announcement/9839) (Open rank · deadline 2027-02-28 · Akadeus)
-- **Concordia University** — [Dean, John Molson School of Business](https://akadeus.com/announcement/9911) (Dean/Admin · Akadeus)
+### Economics (5)
+- **Bocconi University** — [Two Assistant Professor Positions in Economics for Junior Candidates](https://econjobmarket.org/positions/12715) (Assistant · deadline 2026-11-15 · EJM)
+- **IÉSEG School of Management** — [Postdoctoral Position in Behavioral Economics, Climate Economics, and Decision-Making under Uncertainty](https://akadeus.com/announcement/9914) (Postdoc · deadline 2026-11-15 · Akadeus)
+- **The City College of New York** — [Assistant Professor in Economics](https://www.aeaweb.org/joe/listing.php?JOE_ID=2026-02_111478446) (Assistant · deadline 2026-11-28 · JOE)
+- **Bocconi University** — [1 Post-Doc Researcher - Department of Economics - Università Bocconi](https://econjobmarket.org/positions/12900) (Postdoc · deadline 2026-11-30 · EJM)
+- **Balearic Islands University** — [Assistant or Associate Professor in Business Economics, Management, Finance, Marketing, and Accounting](https://akadeus.com/announcement/9936) (Assistant/Associate · deadline 2026-12-05 · Akadeus)
+
+### Information Systems (5)
+- **Grenoble Ecole de Management** — [Assistant / Associate Professor in Information Systems](https://akadeus.com/announcement/9902) (Assistant/Associate · deadline 2027-01-30 · Akadeus)
+- **Seton Hall University** — [Adjunct Professor - Information Technology Management](https://www.higheredjobs.com/details.cfm?JobCode=179571436) (Clinical/Teaching · HigherEdJobs)
+- **University of Colorado Denver** — [Lecturer in Information Systems](https://www.higheredjobs.com/details.cfm?JobCode=179601445) (Clinical/Teaching · HigherEdJobs)
+- **Westchester Community College** — [Adjunct Faculty/Computer Information Systems (CIS)](https://careers.insidehighered.com/job/3432635/adjunct-faculty-computer-information-systems-cis-/?TrackID=11&utm_source=rss&utm_medium=feed&utm_campaign=general) (Clinical/Teaching · InsideHigherEd)
+- **Xi'an Jiaotong-Liverpool University** — [Faculty Position in Information Systems-Research Track (Full Rank)](https://akadeus.com/announcement/9892) (Full · Competitive salary in the market · Akadeus)
 
 ### Business Law & Ethics (2)
 - **EDHEC Business School** — [Assistant, Associate, or Full Professor – Business Ethics, with a specialization in Ethics in Finance](https://akadeus.com/announcement/9843) (Open rank · deadline 2027-02-28 · Akadeus)
 - **EDHEC Business School** — [Assistant / Associate Professor of Law](https://akadeus.com/announcement/9830) (Assistant/Associate · Akadeus)
 
-### Economics (2)
-- **IÉSEG School of Management** — [Postdoctoral Position in Behavioral Economics, Climate Economics, and Decision-Making under Uncertainty](https://akadeus.com/announcement/9914) (Postdoc · deadline 2026-11-15 · Akadeus)
-- **Balearic Islands University** — [Assistant or Associate Professor in Business Economics, Management, Finance, Marketing, and Accounting](https://akadeus.com/announcement/9936) (Assistant/Associate · deadline 2026-12-05 · Akadeus)
+### International Business (1)
+- **University of Colorado Denver** — [Lecturer in International Business](https://www.higheredjobs.com/details.cfm?JobCode=179601453) (Clinical/Teaching · HigherEdJobs)
 
-### Information Systems (2)
-- **Grenoble Ecole de Management** — [Assistant / Associate Professor in Information Systems](https://akadeus.com/announcement/9902) (Assistant/Associate · deadline 2027-01-30 · Akadeus)
-- **Xi'an Jiaotong-Liverpool University** — [Faculty Position in Information Systems-Research Track (Full Rank)](https://akadeus.com/announcement/9892) (Full · Competitive salary in the market · Akadeus)
+### Real Estate (1)
+- **Clemson University** — [Assistant Professor - Nieri Department of Construction and Real Estate Development](https://www.higheredjobs.com/details.cfm?JobCode=179601879) (Assistant · HigherEdJobs)
 
-## Deadlines in the next 14 days (127)
+## Deadlines in the next 14 days (126)
 - **University of Central Florida** — [Professor and Miller Technology Endowed Chair in Financial Systems](https://careercenter.aaahq.org/job/276489/professor-and-miller-technology-endowed-chair-in-financial-systems/?TrackID=9&utm_source=rss&utm_medium=feed&utm_campaign=general) (Chair/Endowed · deadline 2026-10-29 · Negotiable · AAA)
 - **universityofnewmexico** — [Assistant Professor - Management Information Systems](https://jobs.chronicle.com/job/38045946/assistant-professor-management-information-systems/?TrackID=10&utm_source=rss&utm_medium=feed&utm_campaign=general) (Assistant · deadline 2026-10-29 · Chronicle)
 - **Mizzou** — [Assistant Teaching Professor](https://careercenter.aaahq.org/job/272766/assistant-teaching-professor/?TrackID=9&utm_source=rss&utm_medium=feed&utm_campaign=general) (Clinical/Teaching · deadline 2026-10-30 · Compensation will be competitive and commensurate with experience. · AAA)
@@ -152,6 +207,8 @@
 - **Kansas State University** — [Assistant Professor, Accounting](https://careercenter.aaahq.org/job/277359/assistant-professor-accounting/?TrackID=9&utm_source=rss&utm_medium=feed&utm_campaign=general) (Assistant · deadline 2026-11-01 · Salary is competitive and commensurate with experience and qualifications. · AAA)
 - **Baruch College** — [Assistant or Associate Professor - Finance (Multiple Positions)](https://careers.afajof.org/job/323820/assistant-or-associate-professor-finance-multiple-positions-/?TrackID=8&utm_source=rss&utm_medium=feed&utm_campaign=general) (Assistant/Associate · deadline 2026-11-01 · $220,000-$235,000 · AFA)
 - **Northwestern University** — [Assistant Professor, Finance](https://careers.afajof.org/job/323822/assistant-professor-finance/?TrackID=8&utm_source=rss&utm_medium=feed&utm_campaign=general) (Assistant · deadline 2026-11-01 · $290,000-$315,000 · AFA)
+- **Stockholm School of Economics** — [Assistant Professor, Tenure Track, in Marketing, especially Retailing](https://akadeus.com/announcement/9889) (Assistant · deadline 2026-11-01 · Akadeus)
+- **Stockholm School of Economics** — [Assistant Professor, Tenure Track, in Strategic Marketing](https://akadeus.com/announcement/9890) (Assistant · deadline 2026-11-01 · Akadeus)
 - **Yale School of Management** — [Yale School of Management, Accounting, Open Rank](https://jobs.chronicle.com/job/38040885/yale-school-of-management-accounting-open-rank/?TrackID=10&utm_source=rss&utm_medium=feed&utm_campaign=general) (Open rank · deadline 2026-11-01 · competitive salary & benefits · Chronicle)
 - **Northern Kentucky University** — [Two Tenure-Track Assistant Professor Positions in Information Systems & Analytics](https://jobs.chronicle.com/job/38041411/two-tenure-track-assistant-professor-positions-in-information-systems-and-analytics/?TrackID=10&utm_source=rss&utm_medium=feed&utm_campaign=general) (Assistant · deadline 2026-11-01 · Competitive Salary · Chronicle)
 - **University of Washington Bothell** — [Assistant Professor in Management & Organization](https://jobs.chronicle.com/job/38042139/assistant-professor-in-management-and-organization/?TrackID=10&utm_source=rss&utm_medium=feed&utm_campaign=general) (Assistant · deadline 2026-11-01 · $15,000-$17,222 per month · Chronicle)
@@ -164,7 +221,6 @@
 - **California Lutheran University** — [Assistant Professor (Tenure-track) or Lecturer (Non Tenure-Track) in Finance](https://jobs.chronicle.com/job/38051813/assistant-professor-tenure-track-or-lecturer-non-tenure-track-in-finance/?TrackID=10&utm_source=rss&utm_medium=feed&utm_campaign=general) (Clinical/Teaching · deadline 2026-11-01 · $80,000 - $110,000 · Chronicle)
 - **Chinese University of Hong Kong (Shenzhen)** — [Postdoctoral Fellow Positions in Platform Economics and Market Design, CUHK(SZ)](https://econjobmarket.org/positions/12463) (Postdoc · deadline 2026-11-01 · RMB 470,000 to 580,000 · EJM)
 - **École Polytechnique Fédérale de Lausanne** — [Faculty Positions in Finance](https://econjobmarket.org/positions/12575) (Assistant/Associate · deadline 2026-11-01 · EJM)
-- **Utrecht University** — [Full Professor Banking & Finance](https://econjobmarket.org/positions/12643) (Full · deadline 2026-11-01 · EJM)
 - **University of Queensland** — [Lecturer / Senior Lecturer in Economics](https://econjobmarket.org/positions/12721) (Lecturer · deadline 2026-11-01 · $119,462 - $141,545 · EJM)
 - **Augsburg University** — [Assistant/Associate/Full Professor (Open Rank)- Economics](https://www.aeaweb.org/joe/listing.php?JOE_ID=2026-02_111477646) (Open rank · deadline 2026-11-01 · JOE)
 - **Milligan University** — [Assistant/Associate Professor of Economics](https://www.aeaweb.org/joe/listing.php?JOE_ID=2026-02_111477858) (Open rank · deadline 2026-11-01 · JOE)
@@ -176,8 +232,6 @@
 - **Peking University** — [China International Conference in Economics & China Job Market in Economics 2026](https://www.aeaweb.org/joe/listing.php?JOE_ID=2026-02_111478358) (Unspecified · deadline 2026-11-01 · JOE)
 - **MAYNOOTH UNIVERSITY** — [Assistant Professor / Lecturer in Human Resource Management / Organisational Behaviour](https://www.timeshighereducation.com/unijobs/listing/416301/assistant-professor-lecturer-in-human-resource-management-organisational-behaviour/?LinkSource=PremiumListing) (Assistant · deadline 2026-11-01 · €43,025 – €104,600 p.a. · THE)
 - **LIVERPOOL JOHN MOORES UNIVERSITY** — [Lecturer in Finance and Accounting](https://www.timeshighereducation.com/unijobs/listing/416445/lecturer-in-finance-and-accounting/?LinkSource=PremiumListing) (Lecturer · deadline 2026-11-01 · £38,784 - £46,049 per annum · THE)
-- **Stockholm School of Economics** — [Assistant Professor, Tenure Track, in Marketing, especially Retailing](https://akadeus.com/announcement/9889) (Assistant · deadline 2026-11-01 · Akadeus)
-- **Stockholm School of Economics** — [Assistant Professor, Tenure Track, in Strategic Marketing](https://akadeus.com/announcement/9890) (Assistant · deadline 2026-11-01 · Akadeus)
 - **Shanghai University of Finance and Economics** — [Shanghai University of Finance and Economics (SUFE), School of Finance Tenure-track Faculty Position](https://careers.afajof.org/job/323858/shanghai-university-of-finance-and-economics-sufe-school-of-finance-tenure-track-faculty-position/?TrackID=8&utm_source=rss&utm_medium=feed&utm_campaign=general) (Assistant · deadline 2026-11-02 · We offer a competitive compensation package · AFA)
 - **Hood College** — [Assistant Professor of Finance](https://jobs.chronicle.com/job/38031821/assistant-professor-of-finance/?TrackID=10&utm_source=rss&utm_medium=feed&utm_campaign=general) (Assistant · deadline 2026-11-02 · $80,000 - $85,000 · Chronicle)
 - **New York University Abu Dhabi** — [Associate/Full Professor of Management - Stern at NYUAD](https://jobs.chronicle.com/job/38051019/associate-full-professor-of-management-stern-at-nyuad/?TrackID=10&utm_source=rss&utm_medium=feed&utm_campaign=general) (Associate/Full · deadline 2026-11-02 · Competitive Salary · Chronicle)
@@ -185,23 +239,27 @@
 - **Pace University** — [Assistant/Associate Professor of Finance and Economics](https://www.aeaweb.org/joe/listing.php?JOE_ID=2026-02_111477967) (Assistant/Associate · deadline 2026-11-02 · JOE)
 - **Imperial College London** — [Assistant / Associate / Full Professors in Economics](https://econjobmarket.org/positions/12773) (Open rank · deadline 2026-11-03 · EJM)
 - **University of Connecticut** — [Dean, School of Business](https://careercenter.aaahq.org/job/277358/dean-school-of-business/?TrackID=9&utm_source=rss&utm_medium=feed&utm_campaign=general) (Dean/Admin · deadline 2026-11-04 · Commensurate with qualifications · AAA)
+- **School of Management, Huazhong University of Science and Technology** — [faculty](https://careers.afajof.org/job/323730/faculty-/?TrackID=8&utm_source=rss&utm_medium=feed&utm_campaign=general) (Assistant/Associate · deadline 2026-11-04 · $100,000 to $200,000 per year · AFA)
 
-## Closed / removed this week (0)
-_None._
+## Closed / removed this week (4)
+- Xavier University — Assistant Professor of Instruction, Accountancy (Removed from AAA listing)
+- Ball State University — Assistant Lecturer/Assistant Teaching Professor of Entrepreneurship (Removed from Chronicle listing)
+- Utrecht University — Full Professor Banking & Finance (Posting removed or marked closed)
+- Indian Institute of Management Bangalore — IIMB Dorabji Tata School of Undergraduate Studies (Posting removed or marked closed)
 
 ## Source health
 | Source | OK | Listed | New | Closed | Note |
 |---|---|---|---|---|---|
-| Akadeus | ✅ | 82 | 82 | 0 |  |
 | AFA | ✅ | 92 | 0 | 0 |  |
-| JOE | ✅ | 225 | 0 | 0 |  |
-| EJM | ✅ | 112 | 0 | 0 |  |
-| AAA | ✅ | 49 | 0 | 0 |  |
-| Chronicle | ✅ | 446 | 1 | 0 |  |
-| InsideHigherEd | ✅ | 109 | 0 | 0 |  |
-| THE | ✅ | 63 | 0 | 0 |  |
-| HigherEdJobs | ✅ | 401 | 0 | 0 | source incomplete or unavailable this run |
-| AJO | ✅ | 13 | 0 | 0 |  |
+| JOE | ✅ | 228 | 3 | 0 |  |
+| EJM | ✅ | 112 | 2 | 2 |  |
+| AAA | ✅ | 48 | 0 | 1 |  |
+| Chronicle | ✅ | 449 | 7 | 1 |  |
+| InsideHigherEd | ✅ | 114 | 7 | 0 |  |
+| THE | ✅ | 73 | 11 | 0 |  |
+| Akadeus | ✅ | 82 | 0 | 0 |  |
+| HigherEdJobs | ✅ | 393 | 28 | 0 | source incomplete or unavailable this run |
+| AJO | ✅ | 13 | 1 | 0 |  |
 | CES | ✅ | 2 | 0 | 0 |  |
 | SJTU-Antai | ✅ | 9 | 0 | 0 | source incomplete or unavailable this run |
 | EFN-China | ✅ | 6 | 0 | 0 | source incomplete or unavailable this run |
