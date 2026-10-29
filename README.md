@@ -1,20 +1,33 @@
 # Academic Job Market Tracker (business schools)
 
-A personal tracker for the business-school faculty job market (finance, accounting, marketing,
-management/strategy, OB/HR, operations, information systems, analytics, business economics, real estate,
-insurance and more).
+![Academic Job Market Tracker](docs/images/hero.jpg)
 
-* **Every Monday** a GitHub Actions job collects new postings from the job boards listed below. It saves them
-  to `data/jobs.csv`. The job runs on GitHub's servers; it does not use Claude, and public repositories get it
-  free.
+A free tracker for the business-school faculty job market: finance, accounting, marketing, management/strategy,
+OB/HR, operations, information systems, analytics, business economics, real estate, insurance and more.
+
+**[⬇️ Download for Windows or Mac](https://github.com/ZoeHu92/Job_Market_Application_Tracker/releases/latest)** ·
+[User guide](docs/USER_GUIDE.md) · [Privacy](PRIVACY.md)
+
+![Search, tick "Plan", and the job appears on your to-apply list with its deadline countdown](docs/images/demo.gif)
+
+* **Every Monday** a GitHub Actions job collects new postings from the job boards listed below and saves them to
+  `data/jobs.csv`. It runs on GitHub's servers and costs nothing; the app downloads the new list by itself.
 * Each posting is parsed into **school, field, rank, tenure track, degree requirement (PhD / ABD OK), deadline,
   review start date, salary, start date, requested materials, interview venue (FMA, AFA/ASSA, …)** and the key
   requirement sentences. Postings written in Chinese (Chinese university sites) are parsed too.
-* When a posting disappears from its board (or its page says *expired / filled*), it is marked **Closed**.
+* The same job posted on several boards is shown once. When a posting disappears from its board (or its page says
+  *expired / filled*), it is marked **Closed**.
 * A local web app lets you **tick boxes** for ⭐ shortlist → Plan to apply → Applied (date) → Interview → Flyout →
   Offer (or ✗ Out), add notes, and see deadlines coming up.
-* A weekly **digest issue** opens on GitHub (GitHub emails it to you): new postings by field, deadlines in the
-  next 14 days, and postings closed that week.
+* A weekly **digest issue** opens on GitHub: new postings by field, deadlines in the next 14 days, and postings
+  closed that week. To get it by e-mail, *Watch* this repository (Watch → Custom → Issues).
+
+| Jobs | My applications | Job details |
+|---|---|---|
+| [![All postings with filters and tick boxes](docs/images/jobs.png)](docs/images/jobs.png) | [![Pipeline counts, to-apply list with deadline countdown, full pipeline](docs/images/applications.png)](docs/images/applications.png) | [![One posting parsed: salary, degree, materials, interview venue](docs/images/details.png)](docs/images/details.png) |
+| Filter by field, rank, region and deadline; tick to track. | Stage counts, a deadline countdown and your whole pipeline. | Salary, degree, materials and interview venue, read from the ad. |
+
+<sub>Screenshots use demo progress on fictional schools.</sub>
 
 > **Your progress is private.** Ticks, dates, notes and the jobs you add are stored only on your own computer, or
 > in a cloud-drive folder you choose. They are never uploaded to GitHub or anywhere else, and every user's
@@ -188,6 +201,7 @@ Postings that come back are re-opened.
 ```
 app.py, launch.py          Streamlit app and its launcher
 docs/USER_GUIDE.md         step-by-step user guide
+docs/images/               screenshots, banner and demo animation (demo data)
 PRIVACY.md                 what is stored where, what is public, what goes over the internet
 tracker/                   scraper + parsing + storage (python -m tracker.scrape)
 config/sources.yaml        job boards

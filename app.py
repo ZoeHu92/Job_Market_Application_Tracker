@@ -418,7 +418,9 @@ def page_details() -> None:
     left, right = st.columns([3, 2], gap="large")
     with left:
         facts = {
-            "Deadline": r["deadline_note"] or (fmt_date(r["deadline_dt"].date()) if pd.notna(r["deadline_dt"]) else "Not stated"),
+            # the note reads "Deadline Oct 30, 2026; review begins ..." and the label already says Deadline
+            "Deadline": re.sub(r"^Deadline\s+", "", r["deadline_note"]) or (
+                fmt_date(r["deadline_dt"].date()) if pd.notna(r["deadline_dt"]) else "Not stated"),
             "Start date": r["start_date"] or "—",
             "Salary": r["salary"] or "Not stated",
             "Degree": r["degree_req"],
